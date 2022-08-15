@@ -6,8 +6,20 @@ Snap 'n' Mix was completely built with React for the front-end, NodeJS for the b
 
 This application was developed by Jaydan Zabar, Taimoor Salam, Dusan Sasic, Devin Caron and Cole Spehar
 
+## Home page
 ![HomePage](https://github.com/Taimoor-Salam/snapnmix/blob/main/frontend/public/HomePage.png)
+
+## Cocktail modal
 ![Modals](https://github.com/Taimoor-Salam/snapnmix/blob/main/frontend/public/ModalShowcase.png)
+
+## Scan page
 ![Scan](https://github.com/Taimoor-Salam/snapnmix/blob/main/frontend/public/ScanPage.png)
+Allows the user to choose either uploading an image or using their camera to take a picture that is then sent to Google's Cloud Vision API for image classification.
+
+## Scan result / Ingredients page
 ![Ingredients](https://github.com/Taimoor-Salam/snapnmix/blob/main/frontend/public/Ingredients%20Scan.png)
+Identified ingredients by Google's Cloud Vision API will be displayed here while also allowing the user to then add or remove ingredients.
+
+## Best Matched Cocktail Recipes Page
 ![BestMatched](https://github.com/Taimoor-Salam/snapnmix/blob/main/frontend/public/BestMatchedCocktails.png)
+Once ingredients are submitted and used to query an open-source cocktail database, cocktails that contain all or most of the ingredients will be returned and displayed on this page along with cocktails that contain one of the submitted ingredients.
