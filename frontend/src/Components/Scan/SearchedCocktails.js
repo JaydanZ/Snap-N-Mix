@@ -8,7 +8,7 @@ import Loading from "./Loading";
 import "../Browse/Browse.css";
 import noDrinks from "./nofavorite.jpg";
 
-const startUrl = "https://sandmbackendnew.herokuapp.com/";
+const startUrl = process.env.REACT_APP_BACKEND_URL;
 
 const SearchedCocktails = (props) => {
   const [cocktailArray, setCocktailArray] = useState([]);
@@ -69,7 +69,7 @@ const SearchedCocktails = (props) => {
           });
         });
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
 
     // Merge all cocktails into one array
@@ -83,7 +83,6 @@ const SearchedCocktails = (props) => {
     }
 
     // Sort best match array
-    console.log(loadedCocktails);
     setIngredientsArrState(ingredientArrayCopy);
     setCocktailArray(loadedCocktails);
     setIsLoading(false);

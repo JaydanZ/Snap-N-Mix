@@ -7,7 +7,7 @@ import { Modal, Button } from "react-bootstrap";
 let dataInstructions_TEMP = "";
 let dataIngredients_TEMP = [];
 
-const startUrl = "https://sandmbackendnew.herokuapp.com/";
+const startUrl = process.env.REACT_APP_BACKEND_URL;
 
 const CocktailDetailer = (props) => {
   const authCtx = useContext(AuthContext);

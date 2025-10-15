@@ -1,6 +1,6 @@
 import "./Scan.css";
-import { Route, Switch, useHistory } from "react-router-dom";
-import React, { useState, useEffect, useRef, useContext } from "react";
+import { Route, useHistory } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
 import Camera from "./CameraComp";
 import axios from "axios";
 import IngredientItem from "./IngredientItem";
@@ -9,10 +9,9 @@ import SearchIngredient from "./SearchIngredient";
 import NavBar2 from "../NavBar/NavBar2";
 import Loading from "./Loading";
 import ScanHelper from "./ScanHelper";
-import AuthContext from "../store/auth-context";
 import IngredientUpdatedToast from "./IngredientUpdatedToast.js";
 
-const startUrl = "https://sandmbackendnew.herokuapp.com/";
+const startUrl = process.env.REACT_APP_BACKEND_URL;
 
 const Scan = (props) => {
   const [useCamera, setUseCamera] = useState(false);
@@ -110,13 +109,15 @@ const Scan = (props) => {
       const filteredArr = filterIngredients(loadedIngredients, "item");
 
       const finalArr = filteredArr.filter((item) => {
+        let finalItem;
         if (
           !item.item.includes("fruit") &&
           !item.item.includes("candy") &&
           !item.item.includes("juice")
         ) {
-          return item;
+          finalItem = item;
         }
+        return finalItem;
       });
 
       setIngredients(finalArr);
@@ -322,7 +323,7 @@ const Scan = (props) => {
   scanMethodHandler();
 
   useEffect(() => {
-    props.navBar(<NavBar2 currPage="2"/>);
+    props.navBar(<NavBar2 currPage="2" />);
   }, []);
 
   return (

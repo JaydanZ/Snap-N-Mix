@@ -1,17 +1,14 @@
 import "./Browse.css";
 import Loading from "../Scan/Loading";
-import CocktailCard from "../Cards/CocktailCard";
 import CocktailCircleCard from "../Cards/CocktailCircleCard";
 import CategoryCircleCard from "../Cards/CategoryCircleCard";
-import CocktailDetailer from "../Cards/CocktailDetailer";
-import NavBar from "../NavBar/NavBar";
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
 import AuthContext from "../store/auth-context";
 import NavBar2 from "../NavBar/NavBar2";
 
-const startUrl = "https://sandmbackendnew.herokuapp.com/";
+const startUrl = process.env.REACT_APP_BACKEND_URL;
+
 let RECIPE_DATA_POPULAR = [];
 let FAV_IDS = [];
 let NO_FAVORITES = [
@@ -96,11 +93,9 @@ const Browse = (props) => {
             headers: { "auth-token": authCtx.token },
           })
           .then((res) => {
-            if (res.data.favRecipes === undefined){
+            if (res.data.favRecipes === undefined) {
               setDisplayedFavoriteData(NO_FAVORITES);
-
-            }else 
-            if (res.data.success === false) {
+            } else if (res.data.success === false) {
               setDisplayedFavoriteData(NO_FAVORITES);
             } else {
               if (res.data.favRecipes.favRecipes.length > 0) {
@@ -164,9 +159,9 @@ const Browse = (props) => {
     }
   };
 
-  const clearSearchHandler = (event) =>{
+  const clearSearchHandler = (event) => {
     event.target.value = "";
-  }
+  };
 
   const cocktailSearchHandler = (event) => {
     let cocktailEntered = "";
@@ -287,18 +282,18 @@ const Browse = (props) => {
       {!isLoading && (
         <ul className="cocktailAllLists">
           <div className="search-box">
-          <button class="btn-search">
-            <i class="fas fa-search"></i>
-          </button>
-          <input
-            type="text"
-            class="input-search"
-            placeholder="Search for a cocktail.."
-            aria-label="Search for a cocktail.."
-            aria-describedby="button-addon2"
-            onChange={cocktailSearchHandler}
-          ></input>
-        </div>
+            <button class="btn-search">
+              <i class="fas fa-search"></i>
+            </button>
+            <input
+              type="text"
+              class="input-search"
+              placeholder="Search for a cocktail.."
+              aria-label="Search for a cocktail.."
+              aria-describedby="button-addon2"
+              onChange={cocktailSearchHandler}
+            ></input>
+          </div>
           {cocktailSearch}
           <div className="listDiv">
             {OPEN_CATEGORY && (
@@ -354,7 +349,7 @@ const Browse = (props) => {
           <h5 className="listHeader">Popular Drinks</h5>
           <div className="listDiv">
             <ul className="cocktailPopularList">
-              {(
+              {
                 <button
                   className="arrowListLeftScroll"
                   onClick={() =>
@@ -363,7 +358,7 @@ const Browse = (props) => {
                 >
                   <ion-icon name="chevron-back-outline"></ion-icon>
                 </button>
-              )}
+              }
               {displayedPopularData.map((drink) => (
                 <CocktailCircleCard
                   type="drink"
@@ -378,25 +373,25 @@ const Browse = (props) => {
                 />
               ))}
             </ul>
-            {(
+            {
               <button
                 className="arrowListRightScroll"
                 onClick={() => arrowListScrollHandler(1, "cocktailPopularList")}
               >
                 <ion-icon name="chevron-forward-outline"></ion-icon>
               </button>
-            )}
+            }
           </div>
           <h5 className="listHeader">Latest Drinks</h5>
           <div className="listDiv">
-            {(
+            {
               <button
                 className="arrowListLeftScroll"
                 onClick={() => arrowListScrollHandler(0, "cocktailLatestList")}
               >
                 <ion-icon name="chevron-back-outline"></ion-icon>
               </button>
-            )}
+            }
             <ul className="cocktailLatestList">
               {displayedLatestData.map((drink) => (
                 <CocktailCircleCard
@@ -412,14 +407,14 @@ const Browse = (props) => {
                 />
               ))}
             </ul>
-            {(
+            {
               <button
                 className="arrowListRightScroll"
                 onClick={() => arrowListScrollHandler(1, "cocktailLatestList")}
               >
                 <ion-icon name="chevron-forward-outline"></ion-icon>
               </button>
-            )}
+            }
           </div>
           <h5 className="listHeader">Favorite Drinks</h5>
           <div className="listDiv">
@@ -436,7 +431,13 @@ const Browse = (props) => {
             <ul className="cocktailFavouriteList">
               {displayedFavoriteData.map((drink) => (
                 <CocktailCircleCard
-                  type={drink.alterClick === 1 ? "signupDrink" : drink.alterClick === 2 ? "" : "drink"}
+                  type={
+                    drink.alterClick === 1
+                      ? "signupDrink"
+                      : drink.alterClick === 2
+                      ? ""
+                      : "drink"
+                  }
                   id={drink.idDrink}
                   title={drink.strDrink}
                   avatar={drink.strDrinkThumb}

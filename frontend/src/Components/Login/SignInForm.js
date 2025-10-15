@@ -2,15 +2,15 @@ import React, { useState, useContext } from "react";
 import "./SignInForm.css";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
-import { NavLink, useHistory } from 'react-router-dom'
-import AuthContext from "../store/auth-context"
+import { NavLink, useHistory } from "react-router-dom";
+import AuthContext from "../store/auth-context";
 import axios from "axios";
 
-const startUrl = "https://sandmbackendnew.herokuapp.com/"
+const startUrl = process.env.REACT_APP_BACKEND_URL;
 
 let state = {
-  response: String
-}; 
+  response: String,
+};
 
 const SignInForm = (props) => {
   let history = useHistory();
@@ -45,31 +45,31 @@ const SignInForm = (props) => {
         password: enteredPassword,
       };
 
-
       // API CODE
       // ========================================================================================
       // Send http get request to API
       try {
-         axios.post(startUrl + "api/user/login", loginInfo)
-         .then(res => {
-           if (res.data.success === false){
-            setErrorMsg(res.data.message);
-           }else{
-            setErrorMsg('');
-            authCtx.login(res.data.token);
-            props.authtokenpass(res.data);
-            history.push('/browse');
-           }
-         })
-         .catch(err => {
-           console.log(err);
-         })
+        axios
+          .post(startUrl + "api/user/login", loginInfo)
+          .then((res) => {
+            if (res.data.success === false) {
+              setErrorMsg(res.data.message);
+            } else {
+              setErrorMsg("");
+              authCtx.login(res.data.token);
+              props.authtokenpass(res.data);
+              history.push("/browse");
+            }
+          })
+          .catch((err) => {
+            console.log(err);
+          });
       } catch (error) {
         // Error handle
       }
       //========================================================================================
     } else {
-      setErrorMsg("Fields cannot be empty!")
+      setErrorMsg("Fields cannot be empty!");
       return;
     }
   };
@@ -107,7 +107,13 @@ const SignInForm = (props) => {
           <div>
             <label>Or</label>
           </div>
-          <NavLink onClick={guestLoginHandler} className="guestLink" to='/browse'>Continue as <span>Guest</span></NavLink>
+          <NavLink
+            onClick={guestLoginHandler}
+            className="guestLink"
+            to="/browse"
+          >
+            Continue as <span>Guest</span>
+          </NavLink>
           <div>
             <label onClick={signUpHandler} className="signup-txt">
               New here? <span>Sign up</span>

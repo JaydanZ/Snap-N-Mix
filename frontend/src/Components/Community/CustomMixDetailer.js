@@ -7,7 +7,8 @@ import { Modal, Button } from "react-bootstrap";
 
 let imageCheck = false;
 let imageUploaded = false;
-const startUrl = "https://sandmbackendnew.herokuapp.com/";
+
+const startUrl = process.env.REACT_APP_BACKEND_URL;
 
 const CustomMixDetailer = (props) => {
   const authCtx = useContext(AuthContext);
@@ -89,16 +90,22 @@ const CustomMixDetailer = (props) => {
     if (enteredMixName === "") {
       setInvalidErrorMsg(<p className="customMixErrorMsg">Set a name!</p>);
     } else if (customIngredients.length < 1) {
-      setInvalidErrorMsg(<p className="customMixErrorMsg">Add some ingredients!</p>);
+      setInvalidErrorMsg(
+        <p className="customMixErrorMsg">Add some ingredients!</p>
+      );
     } else if (enteredMixInstructions === "") {
-      setInvalidErrorMsg(<p className="customMixErrorMsg">Set the Instructions!</p>);
+      setInvalidErrorMsg(
+        <p className="customMixErrorMsg">Set the Instructions!</p>
+      );
     } else if (imageCheck === false) {
-      setInvalidErrorMsg(<p className="customMixErrorMsg">"Upload an image!"</p>);
+      setInvalidErrorMsg(
+        <p className="customMixErrorMsg">"Upload an image!"</p>
+      );
     } else if (props.customMixIDs.includes(enteredMixName)) {
-      setInvalidErrorMsg(<p className="customMixErrorMsg">You must set a unique name!</p>);
-    }
-    else {
-
+      setInvalidErrorMsg(
+        <p className="customMixErrorMsg">You must set a unique name!</p>
+      );
+    } else {
       imageCheck = false;
       const url = startUrl + "api/cocktails/custom/add/";
       const customMixData = {
@@ -132,51 +139,64 @@ const CustomMixDetailer = (props) => {
     }
   };
 
-useEffect(() =>{
-  displayUploadedImage(0);
-  
-  try {
-    axios
-      .get(startUrl + "api/user/info", {
-        headers: { "auth-token": authCtx.token },
-      })
-      .then((res) => {
-        setUserAccountData(res.data.data);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  } catch (error) {
-    console.log("fail");
-  }
-},[]);
+  useEffect(() => {
+    displayUploadedImage(0);
 
-  const displayUploadedImage = (value, img) =>{
-    if (value === 0){
-      setUploadIndicator(<div><div className="sp_card_custommix" onClick={uploadClickHandler}>
-      <div className="sp_card_icon">
-        <ion-icon name="arrow-down-outline"></ion-icon>
-      </div>
-      <div className="sp_card_text">Upload the Thumbnail</div>
-      <div className="sp_card_upload_btn">Upload</div>
-    </div>
-    <input
-      type="file"
-      id="file"
-      ref={inputFile}
-      onChange={handleFileUpload}
-      style={{ display: "none" }}
-    /></div>);
-    } else {
-      setUploadIndicator(<React.Fragment><img className="customCocktailImage" onClick={uploadClickHandler} src={img}></img><input
-      type="file"
-      id="file"
-      ref={inputFile}
-      onChange={handleFileUpload}
-      style={{ display: "none" }}
-    /></ React.Fragment>);
+    try {
+      axios
+        .get(startUrl + "api/user/info", {
+          headers: { "auth-token": authCtx.token },
+        })
+        .then((res) => {
+          setUserAccountData(res.data.data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    } catch (error) {
+      console.log("fail");
     }
-  }
+  }, []);
+
+  const displayUploadedImage = (value, img) => {
+    if (value === 0) {
+      setUploadIndicator(
+        <div>
+          <div className="sp_card_custommix" onClick={uploadClickHandler}>
+            <div className="sp_card_icon">
+              <ion-icon name="arrow-down-outline"></ion-icon>
+            </div>
+            <div className="sp_card_text">Upload the Thumbnail</div>
+            <div className="sp_card_upload_btn">Upload</div>
+          </div>
+          <input
+            type="file"
+            id="file"
+            ref={inputFile}
+            onChange={handleFileUpload}
+            style={{ display: "none" }}
+          />
+        </div>
+      );
+    } else {
+      setUploadIndicator(
+        <React.Fragment>
+          <img
+            className="customCocktailImage"
+            onClick={uploadClickHandler}
+            src={img}
+          ></img>
+          <input
+            type="file"
+            id="file"
+            ref={inputFile}
+            onChange={handleFileUpload}
+            style={{ display: "none" }}
+          />
+        </React.Fragment>
+      );
+    }
+  };
 
   return (
     <Modal show={true} centered size="xl">
@@ -222,9 +242,7 @@ useEffect(() =>{
           onChange={mixInstructionsHandler}
         />
 
-        <div className="customMixUploadButton">
-        {uploadIndicator}
-        </div>
+        <div className="customMixUploadButton">{uploadIndicator}</div>
         <input
           type="file"
           id="file"
@@ -234,12 +252,13 @@ useEffect(() =>{
         />
       </Modal.Body>
       <Modal.Footer>
-     <Button variant="custom"
-        className="customMixSubmitButton"
-        onClick={customMixSubmitHandler}
-      >
-        Submit
-      </Button>
+        <Button
+          variant="custom"
+          className="customMixSubmitButton"
+          onClick={customMixSubmitHandler}
+        >
+          Submit
+        </Button>
       </Modal.Footer>
     </Modal>
   );

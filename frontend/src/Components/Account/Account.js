@@ -1,12 +1,10 @@
 import "./Account.css";
 import React, { useContext, useEffect, useState } from "react";
-import { useHistory } from "react-router-dom";
 import { Button } from "react-bootstrap";
 import AuthContext from "../store/auth-context";
-import { propTypes } from "react-bootstrap/esm/Image";
 import axios from "axios";
 
-const startUrl = "https://sandmbackendnew.herokuapp.com/";
+const startUrl = process.env.REACT_APP_BACKEND_URL;
 let USER_DATA = [];
 
 const Account = (props) => {
@@ -17,7 +15,6 @@ const Account = (props) => {
     },
   ]);
   const authCtx = useContext(AuthContext);
-  const history = useHistory();
 
   const logOutHandler = () => {
     authCtx.logout();
@@ -50,12 +47,17 @@ const Account = (props) => {
         </div>
         <div className="accountUserStatsContainer">
           <div className="accountStatBox_favourited">
-            <span className="accountStatCount_favourited">{userData.favoriteCount}</span>Favourited
-            Drinks
+            <span className="accountStatCount_favourited">
+              {userData.favoriteCount}
+            </span>
+            Favourited Drinks
             <span className="accountStat_favourited_outline"></span>
           </div>
           <div className="accountStatBox_created">
-            <span className="accountStatCount_created">{userData.customCount}</span>Created Drinks
+            <span className="accountStatCount_created">
+              {userData.customCount}
+            </span>
+            Created Drinks
             <span className="accountStat_created_outline"></span>
           </div>
         </div>
