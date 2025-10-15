@@ -8,10 +8,6 @@ import axios from "axios";
 
 const startUrl = process.env.REACT_APP_BACKEND_URL;
 
-let state = {
-  response: String,
-};
-
 const SignInForm = (props) => {
   let history = useHistory();
   const [enteredEmail, setEnteredEmail] = useState("");

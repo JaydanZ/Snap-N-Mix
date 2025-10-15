@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Webcam from "react-webcam";
 import "./CameraComp.css";
 import { isMobile } from "react-device-detect";
@@ -52,14 +52,19 @@ const CameraComp = (props) => {
 
   const webcamRef = React.useRef(null);
 
-  const onImageData = (imgData) => {
-    props.onImageData(imgData);
-  };
+  const onImageDataProp = props.onImageData;
 
-  const capture = React.useCallback(() => {
+  const onImageData = useCallback(
+    (imgData) => {
+      onImageDataProp(imgData);
+    },
+    [onImageDataProp]
+  );
+
+  const capture = useCallback(() => {
     const imageSrc = webcamRef.current.getScreenshot();
     onImageData(imageSrc);
-  }, [webcamRef]);
+  }, [webcamRef, onImageData]);
 
   // =======================================================================
 
@@ -67,7 +72,7 @@ const CameraComp = (props) => {
     if (isMobile) {
       updateInput.click();
     }
-  }, []);
+  }, [updateInput]);
 
   return (
     <React.Fragment>

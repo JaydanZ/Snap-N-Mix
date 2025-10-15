@@ -7,8 +7,6 @@ const Login = (props) => {
   const [newSignUp, setNewSignUp] = useState(false);
   const [regMsg, setRegMsg] = useState("");
 
-  const userVerifiedHandler = (userState) => {};
-
   const authtokenHandler = (res) => {
     props.authtokenpass(res);
   };
@@ -27,22 +25,32 @@ const Login = (props) => {
     setNewSignUp(false);
   };
 
+  const { navBar } = props.navBar;
+
   useEffect(() => {
-    props.navBar();
-  }, []);
+    navBar();
+  }, [navBar]);
 
   if (newSignUp === true) {
     return (
       <React.Fragment>
         <div className="form-container">
           <div className="logo">
-            <img className="loginBrand" src="SnapAndMixLogo.png"></img>
+            <img
+              className="loginBrand"
+              src="SnapAndMixLogo.png"
+              alt="loginBrand"
+            ></img>
           </div>
           <SignUpForm registered={signUpHandler} returnLogin={backHandler} />
         </div>
         <div className="developerSignature">
           <p className="developedbyText">Developed By</p>
-          <img className="companyBrand" src="Scan5Logo.png"></img>
+          <img
+            className="companyBrand"
+            src="Scan5Logo.png"
+            alt="companyBrand"
+          ></img>
         </div>
       </React.Fragment>
     );
@@ -51,10 +59,13 @@ const Login = (props) => {
       <React.Fragment>
         <div className="form-container">
           <div className="logo">
-            <img className="loginBrand" src="SnapAndMixLogo.png"></img>
+            <img
+              className="loginBrand"
+              src="SnapAndMixLogo.png"
+              alt="loginBrand"
+            ></img>
           </div>
           <SignInForm
-            onUserVerified={userVerifiedHandler}
             onSignUp={signUpHandler}
             regMsg={regMsg}
             authtokenpass={authtokenHandler}
@@ -62,7 +73,11 @@ const Login = (props) => {
         </div>
         <div className="developerSignature">
           <p className="developedbyText">Developed By</p>
-          <img className="companyBrand" src="Scan5Logo.png"></img>
+          <img
+            className="companyBrand"
+            src="Scan5Logo.png"
+            alt="companyBrand"
+          ></img>
         </div>
       </React.Fragment>
     );

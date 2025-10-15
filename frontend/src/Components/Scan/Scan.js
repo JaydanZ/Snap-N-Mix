@@ -322,9 +322,11 @@ const Scan = (props) => {
 
   scanMethodHandler();
 
+  const { navBar } = props.navBar;
+
   useEffect(() => {
-    props.navBar(<NavBar2 currPage="2" />);
-  }, []);
+    navBar(<NavBar2 currPage="2" />);
+  }, [navBar]);
 
   return (
     <React.Fragment>
