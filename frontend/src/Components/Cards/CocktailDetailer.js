@@ -7,7 +7,7 @@ import { Modal, Button } from "react-bootstrap";
 let dataInstructions_TEMP = "";
 let dataIngredients_TEMP = [];
 
-const startUrl = "https://sandmbackendnew.herokuapp.com/";
+const startUrl = process.env.REACT_APP_BACKEND_URL;
 
 const CocktailDetailer = (props) => {
   const authCtx = useContext(AuthContext);
@@ -28,7 +28,7 @@ const CocktailDetailer = (props) => {
         )
         .then((res) => {
           console.log("Post Success!");
-          if (props.updateFavorites != false) {
+          if (props.updateFavorites !== false) {
             props.updateFavorites();
           } else {
             authCtx.favIDs.push(props.id);
@@ -118,13 +118,13 @@ const CocktailDetailer = (props) => {
     let completeTags = [];
     for (const property in drink) {
       if (property.includes("strIngredient")) {
-        if (drink[property] != null && drink[property] != "") {
+        if (drink[property] !== null && drink[property] !== "") {
           ingredients.push(drink[property]);
         }
       }
 
       if (property.includes("strMeasure")) {
-        if (drink[property] != "") {
+        if (drink[property] !== "") {
           measurements.push(drink[property]);
         }
       }
@@ -143,25 +143,24 @@ const CocktailDetailer = (props) => {
     return completeTags;
   };
 
+  const { id, instructions, iscustom, ingredients } = props;
+
   useEffect(() => {
-    if (authCtx.isLoggedIn === true && props.iscustom === false) {
+    if (authCtx.isLoggedIn === true && iscustom === false) {
       const heart = document.querySelector(".detailsFavoriteButton");
       heart.style.setProperty("color", "gray");
       setFavButtonIcon("heart-outline");
     }
 
-    if (authCtx.favIDs.includes(props.id)) {
+    if (authCtx.favIDs.includes(id)) {
       const heart = document.querySelector(".detailsFavoriteButton");
       setFavButtonIcon("heart");
       heart.style.setProperty("color", "green");
     }
-    if (props.ingredients[0] === undefined) {
+    if (ingredients[0] === undefined) {
       try {
         axios
-          .get(
-            "https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=" +
-              props.id
-          )
+          .get("https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=" + id)
           .then((res) => {
             const data = res.data.drinks[0];
             dataInstructions_TEMP = data.strInstructions;
@@ -170,19 +169,28 @@ const CocktailDetailer = (props) => {
             setDataInstructions(dataInstructions_TEMP);
           });
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     } else {
-      dataIngredients_TEMP = props.ingredients.filter((ingredient) => {
+      dataIngredients_TEMP = ingredients.filter((ingredient) => {
+        let filteredIngredient;
         if (ingredient !== null && ingredient !== "") {
-          return ingredient;
+          filteredIngredient = ingredient;
         }
+        return filteredIngredient;
       });
 
       setDataIngredients(dataIngredients_TEMP);
-      setDataInstructions(props.instructions.trim());
+      setDataInstructions(instructions.trim());
     }
-  }, [props.ingredients]);
+  }, [
+    ingredients,
+    id,
+    instructions,
+    iscustom,
+    authCtx.favIDs,
+    authCtx.isLoggedIn,
+  ]);
 
   return (
     <Modal show={true} centered size="xl">
@@ -197,7 +205,11 @@ const CocktailDetailer = (props) => {
         ></button>
       </Modal.Header>
       <div className="modalImgContainer">
-        <img className="cocktailDetailerContainerImg" src={props.avatar}></img>
+        <img
+          className="cocktailDetailerContainerImg"
+          src={props.avatar}
+          alt="avatar"
+        ></img>
       </div>
       <Modal.Body>
         <div className="cocktailDetailerDataIngredients">

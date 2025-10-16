@@ -1,12 +1,11 @@
-import react, { useState } from "react";
+import { useState } from "react";
 import "./SignInForm.css";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import "./SignUpForm.css";
 import axios from "axios";
-import { Link } from "react-router-dom";
 
-const startUrl = "https://sandmbackendnew.herokuapp.com/"
+const startUrl = process.env.REACT_APP_BACKEND_URL;
 
 const SignUpForm = (props) => {
   const [enteredUsername, setUsername] = useState("");
@@ -16,11 +15,15 @@ const SignUpForm = (props) => {
 
   const registerHandler = (event) => {
     event.preventDefault();
-    if (enteredUsername.length < 6){
-      setErrorMsg('Username must be 6 or more characters!');
-    } else if (enteredPassword.length < 6){
-      setErrorMsg('Password must be 6 or more characters!');
-    } else if (enteredEmail.trim().length > 0 && enteredPassword.trim().length > 0 && enteredUsername.trim().length > 0) {
+    if (enteredUsername.length < 6) {
+      setErrorMsg("Username must be 6 or more characters!");
+    } else if (enteredPassword.length < 6) {
+      setErrorMsg("Password must be 6 or more characters!");
+    } else if (
+      enteredEmail.trim().length > 0 &&
+      enteredPassword.trim().length > 0 &&
+      enteredUsername.trim().length > 0
+    ) {
       const registerInfo = {
         name: enteredUsername,
         email: enteredEmail,
@@ -28,28 +31,26 @@ const SignUpForm = (props) => {
       };
 
       try {
-        axios.post(startUrl + "api/user/register", registerInfo)
-        .then(res => {
-          if (res.data.success === false){
-           setErrorMsg(res.data.message);
-          }else{
-           setErrorMsg('');
-           console.log(res);
-           props.registered();
-          }
-        })
-        .catch(err => {
-          console.log(err);
-        })
-     }catch{
-
-     }
-  } else{
-    setErrorMsg("Fields can't be empty!")
-    console.log("fields empty");
-  }
-}
-
+        axios
+          .post(startUrl + "api/user/register", registerInfo)
+          .then((res) => {
+            if (res.data.success === false) {
+              setErrorMsg(res.data.message);
+            } else {
+              setErrorMsg("");
+              console.log(res);
+              props.registered();
+            }
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      } catch {}
+    } else {
+      setErrorMsg("Fields can't be empty!");
+      console.log("fields empty");
+    }
+  };
 
   const usernameChangeHandler = (event) => {
     setUsername(event.target.value);
@@ -95,9 +96,11 @@ const SignUpForm = (props) => {
           </div>
 
           <Button variant="custom" type="Submit">
-              SIGN UP
-            </Button>
-          <label className="signup-txt" onClick={props.returnLogin}>Already have any account? <span>Log In</span> </label>
+            SIGN UP
+          </Button>
+          <label className="signup-txt" onClick={props.returnLogin}>
+            Already have any account? <span>Log In</span>{" "}
+          </label>
         </div>
       </Form>
     </div>

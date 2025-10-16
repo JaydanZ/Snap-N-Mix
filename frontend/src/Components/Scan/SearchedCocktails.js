@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import axios from "axios";
 import "./SearchedCocktails.css";
 import CocktailCircleCard from "../Cards/CocktailCircleCard";
@@ -8,7 +8,7 @@ import Loading from "./Loading";
 import "../Browse/Browse.css";
 import noDrinks from "./nofavorite.jpg";
 
-const startUrl = "https://sandmbackendnew.herokuapp.com/";
+const startUrl = process.env.REACT_APP_BACKEND_URL;
 
 const SearchedCocktails = (props) => {
   const [cocktailArray, setCocktailArray] = useState([]);
@@ -16,16 +16,16 @@ const SearchedCocktails = (props) => {
   const [ingredientsArrState, setIngredientsArrState] = useState([]);
   const [displayDetails, setDisplayDetails] = useState();
 
-  let NO_DRINKS = {
-    strDrink: "No Drinks Found!",
-    strDrinkThumb: noDrinks,
-    alterText: 1,
-  };
-
   const authCtx = useContext(AuthContext);
-  const loadedCocktails = [];
 
-  const loadCocktails = async () => {
+  const loadCocktails = useCallback(async () => {
+    let NO_DRINKS = {
+      strDrink: "No Drinks Found!",
+      strDrinkThumb: noDrinks,
+      alterText: 1,
+    };
+    const loadedCocktails = [];
+
     let ingredientArrayCopy = JSON.parse(
       window.localStorage.getItem("curIngredients")
     );
@@ -69,7 +69,7 @@ const SearchedCocktails = (props) => {
           });
         });
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
 
     // Merge all cocktails into one array
@@ -78,16 +78,14 @@ const SearchedCocktails = (props) => {
         let tempArr = [];
         tempArr.push(NO_DRINKS);
         loadedCocktails[i].cocktails_arr = tempArr;
-        //bestMatchArray.push(NO_DRINKS);
       }
     }
 
     // Sort best match array
-    console.log(loadedCocktails);
     setIngredientsArrState(ingredientArrayCopy);
     setCocktailArray(loadedCocktails);
     setIsLoading(false);
-  };
+  }, [props.ingredientArray]);
 
   const cardClickHandler = (state) => {
     setDisplayDetails(state);
@@ -109,7 +107,7 @@ const SearchedCocktails = (props) => {
 
   useEffect(() => {
     loadCocktails();
-  }, []);
+  }, [loadCocktails]);
 
   return (
     <React.Fragment>

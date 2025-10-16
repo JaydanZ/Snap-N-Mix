@@ -1,17 +1,14 @@
 import "./Browse.css";
 import Loading from "../Scan/Loading";
-import CocktailCard from "../Cards/CocktailCard";
 import CocktailCircleCard from "../Cards/CocktailCircleCard";
 import CategoryCircleCard from "../Cards/CategoryCircleCard";
-import CocktailDetailer from "../Cards/CocktailDetailer";
-import NavBar from "../NavBar/NavBar";
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
 import AuthContext from "../store/auth-context";
 import NavBar2 from "../NavBar/NavBar2";
 
-const startUrl = "https://sandmbackendnew.herokuapp.com/";
+const startUrl = process.env.REACT_APP_BACKEND_URL;
+
 let RECIPE_DATA_POPULAR = [];
 let FAV_IDS = [];
 let NO_FAVORITES = [
@@ -32,7 +29,6 @@ let RECIPE_DATA = [];
 let OPEN_CATEGORY = false;
 
 const Browse = (props) => {
-  const [enteredCocktail, setEnteredCocktail] = useState("");
   const [displayedPopularData, setDisplayedPopularData] = useState([]);
   const [displayedLatestData, setDisplayedLatestData] = useState([]);
   const [displayedFavoriteData, setDisplayedFavoriteData] = useState([]);
@@ -43,20 +39,8 @@ const Browse = (props) => {
   const [displayDetails, setDisplayDetails] = useState(null);
   const [cocktailSearch, setCocktailSearch] = useState();
   const [isLoading, setIsLoading] = useState(false);
-  const [navbarDisplay, setNavBarDisplay] = useState(true);
-  const [overflowCheck, setOverflowCheck] = useState(false);
 
   const authCtx = useContext(AuthContext);
-
-  useEffect(() => {
-    setIsLoading(true);
-    OPEN_CATEGORY = false;
-    props.navBar(<NavBar2 />);
-    getFavoriteDrinks(authCtx.isLoggedIn);
-    getDrinks("popular", setDisplayedPopularData);
-    getDrinks("latest", setDisplayedLatestData);
-    getDrinks("categories", setDisplayedCategoryData);
-  }, []);
 
   const getDrinks = (category, func) => {
     try {
@@ -67,9 +51,11 @@ const Browse = (props) => {
             RECIPE_DATA_POPULAR = res.data.drinks;
             if (category === "categories") {
               RECIPE_DATA_POPULAR = RECIPE_DATA_POPULAR.filter((catg) => {
+                let filteredCategory;
                 if (!catg.strCategory.includes("/")) {
-                  return catg;
+                  filteredCategory = catg;
                 }
+                return filteredCategory;
               });
             }
 
@@ -88,63 +74,57 @@ const Browse = (props) => {
     }
   };
 
-  const getFavoriteDrinks = (isLoggedIn) => {
-    if (isLoggedIn != false) {
-      try {
-        axios
-          .get(startUrl + "api/cocktails/favorites/", {
-            headers: { "auth-token": authCtx.token },
-          })
-          .then((res) => {
-            if (res.data.favRecipes === undefined){
-              setDisplayedFavoriteData(NO_FAVORITES);
-
-            }else 
-            if (res.data.success === false) {
-              setDisplayedFavoriteData(NO_FAVORITES);
-            } else {
-              if (res.data.favRecipes.favRecipes.length > 0) {
-                RECIPE_DATA_POPULAR = res.data.favRecipes.favRecipes;
-
-                FAV_IDS = RECIPE_DATA_POPULAR.map((drink) => {
-                  return drink.idDrink;
-                });
-                authCtx.favs(FAV_IDS);
-                setDisplayedFavoriteData(res.data.favRecipes.favRecipes);
-              } else {
+  const getFavoriteDrinks = useCallback(
+    (isLoggedIn) => {
+      if (isLoggedIn !== false) {
+        try {
+          axios
+            .get(startUrl + "api/cocktails/favorites/", {
+              headers: { "auth-token": authCtx.token },
+            })
+            .then((res) => {
+              if (res.data.favRecipes === undefined) {
                 setDisplayedFavoriteData(NO_FAVORITES);
-              }
-            }
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-      } catch (error) {
-        console.log("fail");
-      }
-    } else {
-      setDisplayedFavoriteData(NO_FAVORITES_GUEST);
-    }
-  };
+              } else if (res.data.success === false) {
+                setDisplayedFavoriteData(NO_FAVORITES);
+              } else {
+                if (res.data.favRecipes.favRecipes.length > 0) {
+                  RECIPE_DATA_POPULAR = res.data.favRecipes.favRecipes;
 
-  const postFavoritesTest = () => {
-    try {
-      const url = startUrl + "api/cocktails/favorites/add/" + "11000";
-      axios
-        .post(
-          url,
-          {},
-          {
-            headers: { "auth-token": authCtx.token },
-          }
-        )
-        .catch((err) => {
-          console.log(err);
-        });
-    } catch (error) {
-      // Error handle
-    }
-  };
+                  FAV_IDS = RECIPE_DATA_POPULAR.map((drink) => {
+                    return drink.idDrink;
+                  });
+                  authCtx.favs(FAV_IDS);
+                  setDisplayedFavoriteData(res.data.favRecipes.favRecipes);
+                } else {
+                  setDisplayedFavoriteData(NO_FAVORITES);
+                }
+              }
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        } catch (error) {
+          console.log("fail");
+        }
+      } else {
+        setDisplayedFavoriteData(NO_FAVORITES_GUEST);
+      }
+    },
+    [authCtx]
+  );
+
+  const { navBar } = props;
+
+  useEffect(() => {
+    setIsLoading(true);
+    OPEN_CATEGORY = false;
+    navBar(<NavBar2 />);
+    getFavoriteDrinks(authCtx.isLoggedIn);
+    getDrinks("popular", setDisplayedPopularData);
+    getDrinks("latest", setDisplayedLatestData);
+    getDrinks("categories", setDisplayedCategoryData);
+  }, [navBar, authCtx.isLoggedIn, getFavoriteDrinks]);
 
   const searchCocktail = (name) => {
     try {
@@ -163,10 +143,6 @@ const Browse = (props) => {
       console.log("fail");
     }
   };
-
-  const clearSearchHandler = (event) =>{
-    event.target.value = "";
-  }
 
   const cocktailSearchHandler = (event) => {
     let cocktailEntered = "";
@@ -204,13 +180,13 @@ const Browse = (props) => {
 
     for (const property in drink) {
       if (property.includes("strIngredient")) {
-        if (drink[property] != null && drink[property] != "") {
+        if (drink[property] !== null && drink[property] !== "") {
           ingredients.push(drink[property]);
         }
       }
 
       if (property.includes("strMeasure")) {
-        if (drink[property] != "") {
+        if (drink[property] !== "") {
           measurements.push(drink[property]);
         }
       }
@@ -287,18 +263,18 @@ const Browse = (props) => {
       {!isLoading && (
         <ul className="cocktailAllLists">
           <div className="search-box">
-          <button class="btn-search">
-            <i class="fas fa-search"></i>
-          </button>
-          <input
-            type="text"
-            class="input-search"
-            placeholder="Search for a cocktail.."
-            aria-label="Search for a cocktail.."
-            aria-describedby="button-addon2"
-            onChange={cocktailSearchHandler}
-          ></input>
-        </div>
+            <button class="btn-search">
+              <i class="fas fa-search"></i>
+            </button>
+            <input
+              type="text"
+              class="input-search"
+              placeholder="Search for a cocktail.."
+              aria-label="Search for a cocktail.."
+              aria-describedby="button-addon2"
+              onChange={cocktailSearchHandler}
+            ></input>
+          </div>
           {cocktailSearch}
           <div className="listDiv">
             {OPEN_CATEGORY && (
@@ -354,7 +330,7 @@ const Browse = (props) => {
           <h5 className="listHeader">Popular Drinks</h5>
           <div className="listDiv">
             <ul className="cocktailPopularList">
-              {(
+              {
                 <button
                   className="arrowListLeftScroll"
                   onClick={() =>
@@ -363,7 +339,7 @@ const Browse = (props) => {
                 >
                   <ion-icon name="chevron-back-outline"></ion-icon>
                 </button>
-              )}
+              }
               {displayedPopularData.map((drink) => (
                 <CocktailCircleCard
                   type="drink"
@@ -378,25 +354,25 @@ const Browse = (props) => {
                 />
               ))}
             </ul>
-            {(
+            {
               <button
                 className="arrowListRightScroll"
                 onClick={() => arrowListScrollHandler(1, "cocktailPopularList")}
               >
                 <ion-icon name="chevron-forward-outline"></ion-icon>
               </button>
-            )}
+            }
           </div>
           <h5 className="listHeader">Latest Drinks</h5>
           <div className="listDiv">
-            {(
+            {
               <button
                 className="arrowListLeftScroll"
                 onClick={() => arrowListScrollHandler(0, "cocktailLatestList")}
               >
                 <ion-icon name="chevron-back-outline"></ion-icon>
               </button>
-            )}
+            }
             <ul className="cocktailLatestList">
               {displayedLatestData.map((drink) => (
                 <CocktailCircleCard
@@ -412,14 +388,14 @@ const Browse = (props) => {
                 />
               ))}
             </ul>
-            {(
+            {
               <button
                 className="arrowListRightScroll"
                 onClick={() => arrowListScrollHandler(1, "cocktailLatestList")}
               >
                 <ion-icon name="chevron-forward-outline"></ion-icon>
               </button>
-            )}
+            }
           </div>
           <h5 className="listHeader">Favorite Drinks</h5>
           <div className="listDiv">
@@ -436,7 +412,13 @@ const Browse = (props) => {
             <ul className="cocktailFavouriteList">
               {displayedFavoriteData.map((drink) => (
                 <CocktailCircleCard
-                  type={drink.alterClick === 1 ? "signupDrink" : drink.alterClick === 2 ? "" : "drink"}
+                  type={
+                    drink.alterClick === 1
+                      ? "signupDrink"
+                      : drink.alterClick === 2
+                      ? ""
+                      : "drink"
+                  }
                   id={drink.idDrink}
                   title={drink.strDrink}
                   avatar={drink.strDrinkThumb}
