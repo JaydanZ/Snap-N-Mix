@@ -24,15 +24,6 @@ const LaunchPage = (props) => {
             <Button variant="customEnter" onClick={props.handler}>
               ENTER
             </Button>
-
-            <p class="decor-line">
-              <span>Or</span>
-            </p>
-
-            <Button variant="customLeave" onclick="javascript:window.close()">
-              LEAVE
-            </Button>
-
             <small>Always enjoy responsibly</small>
           </div>
         </div>

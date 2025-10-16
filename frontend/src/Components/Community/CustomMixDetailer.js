@@ -182,8 +182,9 @@ const CustomMixDetailer = (props) => {
     }
   };
 
+  displayUploadedImage(0);
+
   useEffect(() => {
-    displayUploadedImage(0);
     try {
       axios
         .get(startUrl + "api/user/info", {
@@ -198,7 +199,7 @@ const CustomMixDetailer = (props) => {
     } catch (error) {
       console.log("fail");
     }
-  }, []);
+  }, [authCtx.token]);
 
   return (
     <Modal show={true} centered size="xl">
