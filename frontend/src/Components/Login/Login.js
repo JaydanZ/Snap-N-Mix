@@ -25,7 +25,7 @@ const Login = (props) => {
     setNewSignUp(false);
   };
 
-  const { navBar } = props.navBar;
+  const navBar = props.navBar;
 
   useEffect(() => {
     navBar();

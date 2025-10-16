@@ -322,7 +322,7 @@ const Scan = (props) => {
 
   scanMethodHandler();
 
-  const { navBar } = props.navBar;
+  const navBar = props.navBar;
 
   useEffect(() => {
     navBar(<NavBar2 currPage="2" />);

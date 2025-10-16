@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useCallback } from "react";
 import CustomMixDetailer from "./CustomMixDetailer";
 import axios from "axios";
 import AuthContext from "../store/auth-context";
@@ -35,11 +35,7 @@ const Community = (props) => {
 
   const authCtx = useContext(AuthContext);
 
-  useEffect(() => {
-    props.navBar(<NavBar2 currPage="3" />);
-    getCustomMixes(authCtx.isLoggedIn);
-    getAllCustomMixes(authCtx.isLoggedIn);
-  }, []);
+  const { navBar } = props;
 
   const createMixHandler = () => {
     setCustomDrinkModal(
@@ -60,38 +56,41 @@ const Community = (props) => {
     setCustomDrinkModal();
   };
 
-  const getCustomMixes = (isLoggedIn) => {
-    if (isLoggedIn) {
-      try {
-        axios
-          .get(startUrl + "api/cocktails/custom/", {
-            headers: { "auth-token": authCtx.token },
-          })
-          .then((res) => {
-            if (res.data.customRecipes === undefined) {
-              setCustomMixData(LOGGEDIN_CUSTOM);
-            } else {
-              CUSTOM_MIXDATA = res.data.customRecipes.customRecipes;
-              if (CUSTOM_MIXDATA.length === 0) {
+  const getCustomMixes = useCallback(
+    (isLoggedIn) => {
+      if (isLoggedIn) {
+        try {
+          axios
+            .get(startUrl + "api/cocktails/custom/", {
+              headers: { "auth-token": authCtx.token },
+            })
+            .then((res) => {
+              if (res.data.customRecipes === undefined) {
                 setCustomMixData(LOGGEDIN_CUSTOM);
               } else {
-                CUSTOM_MIXIDS = CUSTOM_MIXDATA.map((drink) => drink.idDrink);
-                setCustomMixData(CUSTOM_MIXDATA);
+                CUSTOM_MIXDATA = res.data.customRecipes.customRecipes;
+                if (CUSTOM_MIXDATA.length === 0) {
+                  setCustomMixData(LOGGEDIN_CUSTOM);
+                } else {
+                  CUSTOM_MIXIDS = CUSTOM_MIXDATA.map((drink) => drink.idDrink);
+                  setCustomMixData(CUSTOM_MIXDATA);
+                }
               }
-            }
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-      } catch (error) {
-        console.log("fail");
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        } catch (error) {
+          console.log("fail");
+        }
+      } else {
+        setCustomMixData(GUEST_CUSTOM);
       }
-    } else {
-      setCustomMixData(GUEST_CUSTOM);
-    }
-  };
+    },
+    [authCtx.token]
+  );
 
-  const getAllCustomMixes = (isLoggedIn) => {
+  const getAllCustomMixes = useCallback((isLoggedIn) => {
     if (isLoggedIn) {
       try {
         axios
@@ -110,7 +109,7 @@ const Community = (props) => {
     } else {
       setCustomMixData(GUEST_CUSTOM);
     }
-  };
+  }, []);
 
   const cardClickHandler = (state) => {
     setDisplayDetails(state);
@@ -130,6 +129,12 @@ const Community = (props) => {
       catList.scrollLeft = catList.scrollLeft + 300;
     }
   };
+
+  useEffect(() => {
+    navBar(<NavBar2 currPage="3" />);
+    getCustomMixes(authCtx.isLoggedIn);
+    getAllCustomMixes(authCtx.isLoggedIn);
+  }, [navBar, authCtx.isLoggedIn, getCustomMixes, getAllCustomMixes]);
 
   return (
     <div className="myBarContainer">
