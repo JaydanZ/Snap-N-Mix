@@ -36,7 +36,7 @@ const Account = (props) => {
     } catch (error) {
       console.log("fail");
     }
-  }, []);
+  }, [authCtx.token]);
 
   return (
     <div className="accountPageContainer">

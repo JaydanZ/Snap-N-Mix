@@ -7,10 +7,6 @@ const Login = (props) => {
   const [newSignUp, setNewSignUp] = useState(false);
   const [regMsg, setRegMsg] = useState("");
 
-  const authtokenHandler = (res) => {
-    props.authtokenpass(res);
-  };
-
   const signUpHandler = () => {
     if (newSignUp === false) {
       setNewSignUp(true);
@@ -65,11 +61,7 @@ const Login = (props) => {
               alt="loginBrand"
             ></img>
           </div>
-          <SignInForm
-            onSignUp={signUpHandler}
-            regMsg={regMsg}
-            authtokenpass={authtokenHandler}
-          />
+          <SignInForm onSignUp={signUpHandler} regMsg={regMsg} />
         </div>
         <div className="developerSignature">
           <p className="developedbyText">Developed By</p>

@@ -53,7 +53,6 @@ const SignInForm = (props) => {
             } else {
               setErrorMsg("");
               authCtx.login(res.data.token);
-              props.authtokenpass(res.data);
               history.push("/browse");
             }
           })
