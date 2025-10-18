@@ -6,6 +6,7 @@ const fs = require("fs");
 const stringSimilarity = require("string-similarity");
 const common = require("../../common");
 const jwt = require("jsonwebtoken");
+const { Buffer } = require("node:buffer");
 
 //Models
 const ScannedIngredientsModel = require("../../models/ScanedIngredients");
@@ -16,7 +17,9 @@ const internal = require("stream");
 const ScanedIngredients = require("../../models/ScanedIngredients");
 
 // Create client for vision api
-const client = new vision.ImageAnnotatorClient();
+const client = new vision.ImageAnnotatorClient({
+  keyFilename: "./big-blend-475323-n1-d8fef9c3c0c3.json",
+});
 
 //Use types: TEXT_DETECTION and maybe LOGO_DETECTION
 router.post("/", async (req, res) => {
@@ -26,58 +29,89 @@ router.post("/", async (req, res) => {
     const encoded_img = req.body.base64img;
 
     // Creat epost body for TEXT_DETECTION and LOGO_DETECTION
-    const postBodyTextDetect = {
-      requests: [
+    // const postBodyTextDetect = {
+    //   requests: [
+    //     {
+    //       image: {
+    //         content: encoded_img,
+    //       },
+    //       features: [
+    //         {
+    //           type: "TEXT_DETECTION",
+    //           maxResults: 15,
+    //         },
+    //       ],
+    //     },
+    //   ],
+    // };
+    const request = {
+      image: {
+        content: Buffer.from(encoded_img, "base64"),
+      },
+      features: [
         {
-          image: {
-            content: encoded_img,
-          },
-          features: [
-            {
-              type: "TEXT_DETECTION",
-              maxResults: 15,
-            },
-          ],
+          type: "TEXT_DETECTION",
+          maxResults: 15,
+        },
+        {
+          type: "LABEL_DETECTION",
+          maxResults: 25,
         },
       ],
     };
-    const postBodyLabelDetect = {
-      requests: [
-        {
-          image: {
-            content: encoded_img,
-          },
-          features: [
-            {
-              maxResults: 25,
-              type: "LABEL_DETECTION",
-            },
-          ],
-        },
-      ],
-    };
+    // const postBodyLabelDetect = {
+    //   requests: [
+    //     {
+    //       image: {
+    //         content: encoded_img,
+    //       },
+    //       features: [
+    //         {
+    //           maxResults: 25,
+    //           type: "LABEL_DETECTION",
+    //         },
+    //       ],
+    //     },
+    //   ],
+    // };
 
     // Make a call to Cloud Vision API and store it in arrays
     let main_detection_array = [];
     try {
-      const text_detect_result = await client.textDetection(encoded_img);
+      const detect_result = await client.annotateImage(request);
 
-      const text_detection_string =
-        text_detect_result.data.responses[0].fullTextAnnotation.text;
-      main_detection_array = text_detection_string.split("\n");
+      let text_detection_string;
+      let label_detection_string;
+
+      if (detect_result[0].textAnnotations.length !== 0) {
+        text_detection_string =
+          detect_result[0].textAnnotations[0].description.split("\n");
+      }
+
+      if (detect_result[0].labelAnnotations.length !== 0) {
+        label_detection_string =
+          detect_result[0].labelAnnotations[0].description.split("\n");
+      }
+
+      console.log(label_detection_string);
+      console.log(text_detection_string);
+
+      //main_detection_array = text_detection_string.split("\n");
     } catch (error) {
       console.log("Error: ", error.message);
     }
 
     // Make a call to Cloud Vision API and store it in arrays
-    const label_detect_result = await client.labelDetection(encoded_img);
+    // const label_detect_result = await client.labelDetection(
+    //   postBodyLabelDetect
+    // );
 
-    const label_detection_obj_array =
-      label_detect_result.data.responses[0].labelAnnotations;
-    label_detection_obj_array.forEach((obj) => {
-      main_detection_array.push(obj.description);
-      console.log(obj.description);
-    });
+    // const label_detection_obj_array =
+    //   label_detect_result.data.responses[0].labelAnnotations;
+    // label_detection_obj_array.forEach((obj) => {
+    //   main_detection_array.push(obj.description);
+    //   console.log(obj.description);
+    // });
 
     //Filter the data for the results
     let best_match = { score: Number, text: String };
