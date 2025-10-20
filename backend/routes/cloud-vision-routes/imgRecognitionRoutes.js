@@ -17,6 +17,9 @@ const internal = require("stream");
 const ScanedIngredients = require("../../models/ScanedIngredients");
 const { setDefaultAutoSelectFamilyAttemptTimeout } = require("net");
 
+// Limit the ammount of combination api calls
+const COMBINATIONS_LIMIT = 50;
+
 // Create client for vision api
 const client = new vision.ImageAnnotatorClient({
   keyFilename: "./big-blend-475323-n1-d8fef9c3c0c3.json",
@@ -154,6 +157,8 @@ router.post("/submit", async (req, res) => {
   }
 
   let combinations = [];
+
+  // Calculate all combinations
   function string_recurse(active, rest) {
     if (rest.length == 0) {
       if (active.length > 1) {
@@ -166,7 +171,11 @@ router.post("/submit", async (req, res) => {
   }
   string_recurse("", comb_string);
 
-  console.log(combinations);
+  const numOfAPICalls = combinations.length + submitted_ingredients.length;
+
+  // Apply hard limit to not overcall api
+  if (numOfAPICalls > COMBINATIONS_LIMIT)
+    combinations.splice(0, COMBINATIONS_LIMIT - submitted_ingredients.length);
 
   //Different kind of for loop that waits to finish before executing next line
   await Promise.all(
@@ -217,7 +226,6 @@ router.post("/submit", async (req, res) => {
       `https://www.thecocktaildb.com/api/json/v2/${process.env.COCKTAIL_DB_API_KEY}/filter.php?i=${submitted_ingredients[i]}`
     );
     if (response) {
-      // console.log(response.data.drinks);
       cocktails_json.push({
         title: "Drinks with " + submitted_ingredients[i],
         cocktails_arr: response.data.drinks,
