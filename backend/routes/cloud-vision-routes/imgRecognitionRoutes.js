@@ -13,9 +13,6 @@ const ScannedIngredientsModel = require("../../models/ScanedIngredients");
 
 //Import Google's cloud vision api package
 const vision = require("@google-cloud/vision");
-const internal = require("stream");
-const ScanedIngredients = require("../../models/ScanedIngredients");
-const { setDefaultAutoSelectFamilyAttemptTimeout } = require("net");
 
 // Limit the ammount of combination api calls
 const COMBINATIONS_LIMIT = 50;
@@ -97,8 +94,6 @@ router.post("/", async (req, res) => {
       (item, index) => matched_ingredients.indexOf(item) === index
     );
 
-    console.log(matched_ingredients);
-
     res.send(matched_ingredients);
   } catch (error) {
     console.log(error);
@@ -133,8 +128,6 @@ router.post("/submit", async (req, res) => {
 
       await scannedIngredientsModel.save();
     } else {
-      console.log("inside else statmeent!");
-
       for (let i = 0; i < submitted_ingredients.length; i++) {
         const updateIngredients =
           await ScannedIngredientsModel.findOneAndUpdate(
