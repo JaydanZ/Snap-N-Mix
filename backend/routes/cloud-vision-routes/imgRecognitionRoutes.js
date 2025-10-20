@@ -5,16 +5,22 @@ const axios = require("axios");
 const fs = require("fs");
 const stringSimilarity = require("string-similarity");
 const common = require("../../common");
-const jwt = require('jsonwebtoken');
-
+const jwt = require("jsonwebtoken");
+const { Buffer } = require("node:buffer");
 
 //Models
-const ScannedIngredientsModel = require('../../models/ScanedIngredients');
+const ScannedIngredientsModel = require("../../models/ScanedIngredients");
 
-//Import Google's cliud vision api package
+//Import Google's cloud vision api package
 const vision = require("@google-cloud/vision");
-const internal = require("stream");
-const ScanedIngredients = require("../../models/ScanedIngredients");
+
+// Limit the ammount of combination api calls
+const COMBINATIONS_LIMIT = 50;
+
+// Create client for vision api
+const client = new vision.ImageAnnotatorClient({
+  keyFilename: "./big-blend-475323-n1-d8fef9c3c0c3.json",
+});
 
 //Use types: TEXT_DETECTION and maybe LOGO_DETECTION
 router.post("/", async (req, res) => {
@@ -22,68 +28,56 @@ router.post("/", async (req, res) => {
     // Encode the image -> Later use req.body.encodedimg
     // const encoded_img = encodeBase64('./public/media/bottles7.jpg');
     const encoded_img = req.body.base64img;
-
-    // Creat epost body for TEXT_DETECTION and LOGO_DETECTION
-    const postBodyTextDetect = {
-      requests: [
+    const request = {
+      image: {
+        content: Buffer.from(encoded_img, "base64"),
+      },
+      features: [
         {
-          image: {
-            content: encoded_img,
-          },
-          features: [
-            {
-              type: "TEXT_DETECTION",
-              maxResults: 15,
-            },
-          ],
+          type: "TEXT_DETECTION",
+          maxResults: 15,
+        },
+        {
+          type: "LABEL_DETECTION",
+          maxResults: 25,
         },
       ],
-    };
-    const postBodyLabelDetect = {
-      "requests": [
-        {
-          "image": {
-            "content": encoded_img
-          },
-          "features": [
-            {
-              "maxResults": 25,
-              "type": "LABEL_DETECTION"
-            }
-          ]
-        }
-      ]
     };
 
     // Make a call to Cloud Vision API and store it in arrays
     let main_detection_array = [];
     try {
-      const text_detect_result = await axios.post(
-        "https://vision.googleapis.com/v1/images:annotate?key=AIzaSyC6AbFNsHWTqOvonPF-CIXHESWcQ5rcksA",
-        postBodyTextDetect
-      );
+      const detect_result = await client.annotateImage(request);
 
-      const text_detection_string = text_detect_result.data.responses[0].fullTextAnnotation.text;
-      main_detection_array = text_detection_string.split("\n");
+      let text_detection_arr = [];
+      let label_detection_arr = [];
 
+      const textAnnotationResults = detect_result[0].textAnnotations;
+      const labelAnnotationResults = detect_result[0].labelAnnotations;
+
+      if (textAnnotationResults.length !== 0) {
+        for (let i = 0; i < textAnnotationResults.length; i++) {
+          text_detection_arr.push(textAnnotationResults[i]);
+        }
+      }
+
+      if (labelAnnotationResults.length !== 0) {
+        for (let i = 0; i < labelAnnotationResults.length; i++) {
+          label_detection_arr.push(labelAnnotationResults[i]);
+        }
+      }
+
+      // Now push all detected items into main array
+      text_detection_arr.forEach((item) => {
+        main_detection_array.push(item.description);
+      });
+
+      label_detection_arr.forEach((item) => {
+        main_detection_array.push(item.description);
+      });
     } catch (error) {
-      console.log('Error: ', error.message);
+      console.log("Error: ", error.message);
     }
-
-
-
-    // Make a call to Cloud Vision API and store it in arrays
-    const label_detect_result = await axios.post(
-      "https://vision.googleapis.com/v1/images:annotate?key=AIzaSyC6AbFNsHWTqOvonPF-CIXHESWcQ5rcksA",
-      postBodyLabelDetect
-    );
-
-    const label_detection_obj_array = label_detect_result.data.responses[0].labelAnnotations;
-    label_detection_obj_array.forEach((obj) => {
-      main_detection_array.push(obj.description);
-      console.log(obj.description);
-    });
-
 
     //Filter the data for the results
     let best_match = { score: Number, text: String };
@@ -96,18 +90,15 @@ router.post("/", async (req, res) => {
       }
     });
 
-
-    matched_ingredients = matched_ingredients.filter((item, index) => matched_ingredients.indexOf(item) === index);
-
-    console.log(matched_ingredients);
+    matched_ingredients = matched_ingredients.filter(
+      (item, index) => matched_ingredients.indexOf(item) === index
+    );
 
     res.send(matched_ingredients);
-
   } catch (error) {
     console.log(error);
     res.send(error);
   }
-
 });
 
 /**
@@ -120,42 +111,38 @@ router.post("/submit", async (req, res) => {
   const submitted_ingredients = req.body.ingredients;
 
   //Check if the user is logged in
-  const token = req.header('auth-token');
+  const token = req.header("auth-token");
   if (token) {
     const verified = jwt.verify(token, process.env.TOKEN_SECRET); //This returns the id of the user
     console.log(verified);
 
     //Check if user has scanned ingredients
-    const exits = await ScannedIngredientsModel.findOne({ userID: 'si' + verified._id });
+    const exits = await ScannedIngredientsModel.findOne({
+      userID: "si" + verified._id,
+    });
     if (!exits) {
       const scannedIngredientsModel = new ScannedIngredientsModel({
-        userID: 'si' + verified._id,
-        ingredients: req.body.ingredients
-      })
+        userID: "si" + verified._id,
+        ingredients: req.body.ingredients,
+      });
 
       await scannedIngredientsModel.save();
-
     } else {
-      console.log('inside else statmeent!');
-
       for (let i = 0; i < submitted_ingredients.length; i++) {
-        const updateIngredients = await ScannedIngredientsModel.findOneAndUpdate(
-          { userID: 'si' + verified._id },
-          { $addToSet: { ingredients: submitted_ingredients[i] } },
-          { new: true }
-        );
-      };
-
+        const updateIngredients =
+          await ScannedIngredientsModel.findOneAndUpdate(
+            { userID: "si" + verified._id },
+            { $addToSet: { ingredients: submitted_ingredients[i] } },
+            { new: true }
+          );
+      }
     }
-
   }
 
-  
   //Final result object
   let cocktails_json = [];
 
   let cocktails_array = [];
-
 
   let comb_string = "";
   for (let n = 0; n < submitted_ingredients.length; n++) {
@@ -163,6 +150,8 @@ router.post("/submit", async (req, res) => {
   }
 
   let combinations = [];
+
+  // Calculate all combinations
   function string_recurse(active, rest) {
     if (rest.length == 0) {
       if (active.length > 1) {
@@ -175,8 +164,11 @@ router.post("/submit", async (req, res) => {
   }
   string_recurse("", comb_string);
 
-  console.log(combinations);
+  const numOfAPICalls = combinations.length + submitted_ingredients.length;
 
+  // Apply hard limit to not overcall api
+  if (numOfAPICalls > COMBINATIONS_LIMIT)
+    combinations.splice(0, COMBINATIONS_LIMIT - submitted_ingredients.length);
 
   //Different kind of for loop that waits to finish before executing next line
   await Promise.all(
@@ -208,32 +200,34 @@ router.post("/submit", async (req, res) => {
   );
 
   //Clean up the cocktails array
-  var cleanCocktailsArray = cocktails_array.filter((cocktails_array, index, self) =>
-    index === self.findIndex((t) => (t.cocktail.strDrink === cocktails_array.cocktail.strDrink)))
+  var cleanCocktailsArray = cocktails_array.filter(
+    (cocktails_array, index, self) =>
+      index ===
+      self.findIndex(
+        (t) => t.cocktail.strDrink === cocktails_array.cocktail.strDrink
+      )
+  );
 
-  
   cocktails_json.push({
-    title: 'Best Match',
-    cocktails_arr: cleanCocktailsArray
-  })
+    title: "Best Match",
+    cocktails_arr: cleanCocktailsArray,
+  });
 
   // Get the recipes for the each of the ingredients
   for (let i = 0; i < submitted_ingredients.length; i++) {
-    const response = await axios.get(`https://www.thecocktaildb.com/api/json/v2/${process.env.COCKTAIL_DB_API_KEY}/filter.php?i=${submitted_ingredients[i]}`);
+    const response = await axios.get(
+      `https://www.thecocktaildb.com/api/json/v2/${process.env.COCKTAIL_DB_API_KEY}/filter.php?i=${submitted_ingredients[i]}`
+    );
     if (response) {
-      // console.log(response.data.drinks);
       cocktails_json.push({
-        title: 'Drinks with ' + submitted_ingredients[i],
-        cocktails_arr: response.data.drinks
-      })
-
+        title: "Drinks with " + submitted_ingredients[i],
+        cocktails_arr: response.data.drinks,
+      });
     }
   }
 
-
   res.send(cocktails_json);
 });
-
 
 /**
  * Custom function for checking if the ingredient exists in the db
@@ -246,7 +240,10 @@ function findBestMatch(ingredients, txt_result) {
     ingredient = ingredient.toLowerCase();
 
     //Check the whole phrase
-    var full_similarity = stringSimilarity.compareTwoStrings(ingredient, txt_result);
+    var full_similarity = stringSimilarity.compareTwoStrings(
+      ingredient,
+      txt_result
+    );
     if (full_similarity > 0.8) {
       best_matches.push({ score: full_similarity, text: ingredient });
       return;
@@ -255,7 +252,10 @@ function findBestMatch(ingredients, txt_result) {
     //Check each word if separated ' '
     text_result_parts = txt_result.split(" ");
     text_result_parts.forEach((text_part) => {
-      var similarity = stringSimilarity.compareTwoStrings(ingredient, text_part);
+      var similarity = stringSimilarity.compareTwoStrings(
+        ingredient,
+        text_part
+      );
       if (similarity > 0.8) {
         best_matches.push({ score: similarity, text: ingredient });
       }
