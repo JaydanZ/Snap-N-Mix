@@ -15,6 +15,7 @@ const ScannedIngredientsModel = require("../../models/ScanedIngredients");
 const vision = require("@google-cloud/vision");
 const internal = require("stream");
 const ScanedIngredients = require("../../models/ScanedIngredients");
+const { setDefaultAutoSelectFamilyAttemptTimeout } = require("net");
 
 // Create client for vision api
 const client = new vision.ImageAnnotatorClient({
@@ -27,23 +28,6 @@ router.post("/", async (req, res) => {
     // Encode the image -> Later use req.body.encodedimg
     // const encoded_img = encodeBase64('./public/media/bottles7.jpg');
     const encoded_img = req.body.base64img;
-
-    // Creat epost body for TEXT_DETECTION and LOGO_DETECTION
-    // const postBodyTextDetect = {
-    //   requests: [
-    //     {
-    //       image: {
-    //         content: encoded_img,
-    //       },
-    //       features: [
-    //         {
-    //           type: "TEXT_DETECTION",
-    //           maxResults: 15,
-    //         },
-    //       ],
-    //     },
-    //   ],
-    // };
     const request = {
       image: {
         content: Buffer.from(encoded_img, "base64"),
@@ -59,59 +43,41 @@ router.post("/", async (req, res) => {
         },
       ],
     };
-    // const postBodyLabelDetect = {
-    //   requests: [
-    //     {
-    //       image: {
-    //         content: encoded_img,
-    //       },
-    //       features: [
-    //         {
-    //           maxResults: 25,
-    //           type: "LABEL_DETECTION",
-    //         },
-    //       ],
-    //     },
-    //   ],
-    // };
 
     // Make a call to Cloud Vision API and store it in arrays
     let main_detection_array = [];
     try {
       const detect_result = await client.annotateImage(request);
 
-      let text_detection_string;
-      let label_detection_string;
+      let text_detection_arr = [];
+      let label_detection_arr = [];
 
-      if (detect_result[0].textAnnotations.length !== 0) {
-        text_detection_string =
-          detect_result[0].textAnnotations[0].description.split("\n");
+      const textAnnotationResults = detect_result[0].textAnnotations;
+      const labelAnnotationResults = detect_result[0].labelAnnotations;
+
+      if (textAnnotationResults.length !== 0) {
+        for (let i = 0; i < textAnnotationResults.length; i++) {
+          text_detection_arr.push(textAnnotationResults[i]);
+        }
       }
 
-      if (detect_result[0].labelAnnotations.length !== 0) {
-        label_detection_string =
-          detect_result[0].labelAnnotations[0].description.split("\n");
+      if (labelAnnotationResults.length !== 0) {
+        for (let i = 0; i < labelAnnotationResults.length; i++) {
+          label_detection_arr.push(labelAnnotationResults[i]);
+        }
       }
 
-      console.log(label_detection_string);
-      console.log(text_detection_string);
+      // Now push all detected items into main array
+      text_detection_arr.forEach((item) => {
+        main_detection_array.push(item.description);
+      });
 
-      //main_detection_array = text_detection_string.split("\n");
+      label_detection_arr.forEach((item) => {
+        main_detection_array.push(item.description);
+      });
     } catch (error) {
       console.log("Error: ", error.message);
     }
-
-    // Make a call to Cloud Vision API and store it in arrays
-    // const label_detect_result = await client.labelDetection(
-    //   postBodyLabelDetect
-    // );
-
-    // const label_detection_obj_array =
-    //   label_detect_result.data.responses[0].labelAnnotations;
-    // label_detection_obj_array.forEach((obj) => {
-    //   main_detection_array.push(obj.description);
-    //   console.log(obj.description);
-    // });
 
     //Filter the data for the results
     let best_match = { score: Number, text: String };
