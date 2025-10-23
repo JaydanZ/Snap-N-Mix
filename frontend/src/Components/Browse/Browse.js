@@ -40,7 +40,7 @@ const Browse = (props) => {
   const [cocktailSearch, setCocktailSearch] = useState();
   const [isLoading, setIsLoading] = useState(false);
 
-  const authCtx = useContext(AuthContext);
+  const { isLoggedIn, token, favs } = useContext(AuthContext);
 
   const getDrinks = (category, func) => {
     try {
@@ -74,42 +74,45 @@ const Browse = (props) => {
     }
   };
 
-  const getFavoriteDrinks = useCallback((isLoggedIn) => {
-    if (isLoggedIn !== false) {
-      try {
-        axios
-          .get(startUrl + "api/cocktails/favorites/", {
-            headers: { "auth-token": authCtx.token },
-          })
-          .then((res) => {
-            if (res.data.favRecipes === undefined) {
-              setDisplayedFavoriteData(NO_FAVORITES);
-            } else if (res.data.success === false) {
-              setDisplayedFavoriteData(NO_FAVORITES);
-            } else {
-              if (res.data.favRecipes.favRecipes.length > 0) {
-                RECIPE_DATA_POPULAR = res.data.favRecipes.favRecipes;
-
-                FAV_IDS = RECIPE_DATA_POPULAR.map((drink) => {
-                  return drink.idDrink;
-                });
-                authCtx.favs(FAV_IDS);
-                setDisplayedFavoriteData(res.data.favRecipes.favRecipes);
-              } else {
+  const getFavoriteDrinks = useCallback(
+    (isLoggedIn) => {
+      if (isLoggedIn !== false) {
+        try {
+          axios
+            .get(startUrl + "api/cocktails/favorites/", {
+              headers: { "auth-token": token },
+            })
+            .then((res) => {
+              if (res.data.favRecipes === undefined) {
                 setDisplayedFavoriteData(NO_FAVORITES);
+              } else if (res.data.success === false) {
+                setDisplayedFavoriteData(NO_FAVORITES);
+              } else {
+                if (res.data.favRecipes.favRecipes.length > 0) {
+                  RECIPE_DATA_POPULAR = res.data.favRecipes.favRecipes;
+
+                  FAV_IDS = RECIPE_DATA_POPULAR.map((drink) => {
+                    return drink.idDrink;
+                  });
+                  favs(FAV_IDS);
+                  setDisplayedFavoriteData(res.data.favRecipes.favRecipes);
+                } else {
+                  setDisplayedFavoriteData(NO_FAVORITES);
+                }
               }
-            }
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-      } catch (error) {
-        console.log("fail");
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        } catch (error) {
+          console.log("fail");
+        }
+      } else {
+        setDisplayedFavoriteData(NO_FAVORITES_GUEST);
       }
-    } else {
-      setDisplayedFavoriteData(NO_FAVORITES_GUEST);
-    }
-  }, []);
+    },
+    [favs, token]
+  );
 
   const { navBar } = props;
 
@@ -117,11 +120,11 @@ const Browse = (props) => {
     setIsLoading(true);
     OPEN_CATEGORY = false;
     navBar(<NavBar2 />);
-    getFavoriteDrinks(authCtx.isLoggedIn);
+    getFavoriteDrinks(isLoggedIn);
     getDrinks("popular", setDisplayedPopularData);
     getDrinks("latest", setDisplayedLatestData);
     getDrinks("categories", setDisplayedCategoryData);
-  }, [navBar, authCtx.isLoggedIn, getFavoriteDrinks]);
+  }, [navBar, isLoggedIn, getFavoriteDrinks]);
 
   const searchCocktail = (name) => {
     try {
@@ -396,7 +399,7 @@ const Browse = (props) => {
           </div>
           <h5 className="listHeader">Favorite Drinks</h5>
           <div className="listDiv">
-            {authCtx.isLoggedIn && (
+            {isLoggedIn && (
               <button
                 className="arrowListLeftScroll"
                 onClick={() =>
@@ -427,7 +430,7 @@ const Browse = (props) => {
                 />
               ))}
             </ul>
-            {authCtx.isLoggedIn && (
+            {isLoggedIn && (
               <button
                 className="arrowListRightScroll"
                 onClick={() =>
