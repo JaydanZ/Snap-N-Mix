@@ -74,45 +74,42 @@ const Browse = (props) => {
     }
   };
 
-  const getFavoriteDrinks = useCallback(
-    (isLoggedIn) => {
-      if (isLoggedIn !== false) {
-        try {
-          axios
-            .get(startUrl + "api/cocktails/favorites/", {
-              headers: { "auth-token": authCtx.token },
-            })
-            .then((res) => {
-              if (res.data.favRecipes === undefined) {
-                setDisplayedFavoriteData(NO_FAVORITES);
-              } else if (res.data.success === false) {
-                setDisplayedFavoriteData(NO_FAVORITES);
-              } else {
-                if (res.data.favRecipes.favRecipes.length > 0) {
-                  RECIPE_DATA_POPULAR = res.data.favRecipes.favRecipes;
+  const getFavoriteDrinks = useCallback((isLoggedIn) => {
+    if (isLoggedIn !== false) {
+      try {
+        axios
+          .get(startUrl + "api/cocktails/favorites/", {
+            headers: { "auth-token": authCtx.token },
+          })
+          .then((res) => {
+            if (res.data.favRecipes === undefined) {
+              setDisplayedFavoriteData(NO_FAVORITES);
+            } else if (res.data.success === false) {
+              setDisplayedFavoriteData(NO_FAVORITES);
+            } else {
+              if (res.data.favRecipes.favRecipes.length > 0) {
+                RECIPE_DATA_POPULAR = res.data.favRecipes.favRecipes;
 
-                  FAV_IDS = RECIPE_DATA_POPULAR.map((drink) => {
-                    return drink.idDrink;
-                  });
-                  authCtx.favs(FAV_IDS);
-                  setDisplayedFavoriteData(res.data.favRecipes.favRecipes);
-                } else {
-                  setDisplayedFavoriteData(NO_FAVORITES);
-                }
+                FAV_IDS = RECIPE_DATA_POPULAR.map((drink) => {
+                  return drink.idDrink;
+                });
+                authCtx.favs(FAV_IDS);
+                setDisplayedFavoriteData(res.data.favRecipes.favRecipes);
+              } else {
+                setDisplayedFavoriteData(NO_FAVORITES);
               }
-            })
-            .catch((err) => {
-              console.log(err);
-            });
-        } catch (error) {
-          console.log("fail");
-        }
-      } else {
-        setDisplayedFavoriteData(NO_FAVORITES_GUEST);
+            }
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      } catch (error) {
+        console.log("fail");
       }
-    },
-    [authCtx]
-  );
+    } else {
+      setDisplayedFavoriteData(NO_FAVORITES_GUEST);
+    }
+  }, []);
 
   const { navBar } = props;
 
