@@ -10,7 +10,7 @@ let imageCheck = false;
 const startUrl = process.env.REACT_APP_BACKEND_URL;
 
 const CustomMixDetailer = (props) => {
-  const authCtx = useContext(AuthContext);
+  const { token } = useContext(AuthContext);
 
   const [customIngredients, setCustomIngredients] = useState([]);
 
@@ -166,7 +166,7 @@ const CustomMixDetailer = (props) => {
       try {
         axios
           .post(url, customMixData, {
-            headers: { "auth-token": authCtx.token },
+            headers: { "auth-token": token },
           })
           .then((res) => {
             props.closeDetails();
@@ -182,13 +182,12 @@ const CustomMixDetailer = (props) => {
     }
   };
 
-  displayUploadedImage(0);
-
   useEffect(() => {
+    displayUploadedImage(0);
     try {
       axios
         .get(startUrl + "api/user/info", {
-          headers: { "auth-token": authCtx.token },
+          headers: { "auth-token": token },
         })
         .then((res) => {
           setUserAccountData(res.data.data);
@@ -199,7 +198,7 @@ const CustomMixDetailer = (props) => {
     } catch (error) {
       console.log("fail");
     }
-  }, [authCtx.token]);
+  }, [token]);
 
   return (
     <Modal show={true} centered size="xl">
