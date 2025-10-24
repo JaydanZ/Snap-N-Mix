@@ -151,10 +151,10 @@ const CustomMixDetailer = (props) => {
           setUserAccountData(res.data.data);
         })
         .catch((err) => {
-          console.log(err);
+          console.error(err);
         });
     } catch (error) {
-      console.log("fail");
+      console.error("fail");
     }
   }, [token]);
 
