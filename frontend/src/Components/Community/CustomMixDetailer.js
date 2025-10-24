@@ -19,51 +19,10 @@ const CustomMixDetailer = (props) => {
   const [enteredMixInstructions, setEnteredMixInstructions] = useState("");
   const [invalidErrorMsg, setInvalidErrorMsg] = useState();
   const [imgurl, setImgUrl] = useState("N/A");
-  const [uploadIndicator, setUploadIndicator] = useState();
+  const [uploadIndicator, setUploadIndicator] = useState(false);
   const [userAccountData, setUserAccountData] = useState([]);
 
   const inputFile = useRef(null);
-
-  function displayUploadedImage(value, img) {
-    if (value === 0) {
-      setUploadIndicator(
-        <div>
-          <div className="sp_card_custommix" onClick={uploadClickHandler}>
-            <div className="sp_card_icon">
-              <ion-icon name="arrow-down-outline"></ion-icon>
-            </div>
-            <div className="sp_card_text">Upload the Thumbnail</div>
-            <div className="sp_card_upload_btn">Upload</div>
-          </div>
-          <input
-            type="file"
-            id="file"
-            ref={inputFile}
-            onChange={handleFileUpload}
-            style={{ display: "none" }}
-          />
-        </div>
-      );
-    } else {
-      setUploadIndicator(
-        <React.Fragment>
-          <img
-            className="customCocktailImage"
-            onClick={uploadClickHandler}
-            src={img}
-            alt="customCocktailImage"
-          ></img>
-          <input
-            type="file"
-            id="file"
-            ref={inputFile}
-            onChange={handleFileUpload}
-            style={{ display: "none" }}
-          />
-        </React.Fragment>
-      );
-    }
-  }
 
   async function handleFileUpload(e) {
     const { files } = e.target;
@@ -78,14 +37,14 @@ const CustomMixDetailer = (props) => {
           .post(urlPic, formData)
           .then((res) => {
             setImgUrl(res.data.url);
-            displayUploadedImage(1, res.data.url);
+            setUploadIndicator(true);
             imageCheck = true;
           })
           .catch((err) => {
-            console.log(err);
+            console.error(err);
           });
       } catch (error) {
-        // Error handle
+        console.error(error);
       }
     }
   }
@@ -174,16 +133,15 @@ const CustomMixDetailer = (props) => {
             props.customListUpdate();
           })
           .catch((err) => {
-            console.log(err);
+            console.error(err);
           });
       } catch (error) {
-        // Error handle
+        console.error(error);
       }
     }
   };
 
   useEffect(() => {
-    displayUploadedImage(0);
     try {
       axios
         .get(startUrl + "api/user/info", {
@@ -244,7 +202,42 @@ const CustomMixDetailer = (props) => {
           onChange={mixInstructionsHandler}
         />
 
-        <div className="customMixUploadButton">{uploadIndicator}</div>
+        <div className="customMixUploadButton">
+          {uploadIndicator ? (
+            <React.Fragment>
+              <img
+                className="customCocktailImage"
+                onClick={uploadClickHandler}
+                src={imgurl}
+                alt="customCocktailImage"
+              ></img>
+              <input
+                type="file"
+                id="file"
+                ref={inputFile}
+                onChange={handleFileUpload}
+                style={{ display: "none" }}
+              />
+            </React.Fragment>
+          ) : (
+            <div>
+              <div className="sp_card_custommix" onClick={uploadClickHandler}>
+                <div className="sp_card_icon">
+                  <ion-icon name="arrow-down-outline"></ion-icon>
+                </div>
+                <div className="sp_card_text">Upload Thumbnail</div>
+                <div className="sp_card_upload_btn">Upload</div>
+              </div>
+              <input
+                type="file"
+                id="file"
+                ref={inputFile}
+                onChange={handleFileUpload}
+                style={{ display: "none" }}
+              />
+            </div>
+          )}
+        </div>
         <input
           type="file"
           id="file"
