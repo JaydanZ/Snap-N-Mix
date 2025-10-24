@@ -40,7 +40,7 @@ const Browse = (props) => {
   const [cocktailSearch, setCocktailSearch] = useState();
   const [isLoading, setIsLoading] = useState(false);
 
-  const authCtx = useContext(AuthContext);
+  const { isLoggedIn, token, favs } = useContext(AuthContext);
 
   const getDrinks = (category, func) => {
     try {
@@ -80,7 +80,7 @@ const Browse = (props) => {
         try {
           axios
             .get(startUrl + "api/cocktails/favorites/", {
-              headers: { "auth-token": authCtx.token },
+              headers: { "auth-token": token },
             })
             .then((res) => {
               if (res.data.favRecipes === undefined) {
@@ -94,7 +94,7 @@ const Browse = (props) => {
                   FAV_IDS = RECIPE_DATA_POPULAR.map((drink) => {
                     return drink.idDrink;
                   });
-                  authCtx.favs(FAV_IDS);
+                  favs(FAV_IDS);
                   setDisplayedFavoriteData(res.data.favRecipes.favRecipes);
                 } else {
                   setDisplayedFavoriteData(NO_FAVORITES);
@@ -111,7 +111,7 @@ const Browse = (props) => {
         setDisplayedFavoriteData(NO_FAVORITES_GUEST);
       }
     },
-    [authCtx]
+    [favs, token]
   );
 
   const { navBar } = props;
@@ -120,11 +120,11 @@ const Browse = (props) => {
     setIsLoading(true);
     OPEN_CATEGORY = false;
     navBar(<NavBar2 />);
-    getFavoriteDrinks(authCtx.isLoggedIn);
+    getFavoriteDrinks(isLoggedIn);
     getDrinks("popular", setDisplayedPopularData);
     getDrinks("latest", setDisplayedLatestData);
     getDrinks("categories", setDisplayedCategoryData);
-  }, [navBar, authCtx.isLoggedIn, getFavoriteDrinks]);
+  }, [navBar, isLoggedIn, getFavoriteDrinks]);
 
   const searchCocktail = (name) => {
     try {
@@ -399,7 +399,7 @@ const Browse = (props) => {
           </div>
           <h5 className="listHeader">Favorite Drinks</h5>
           <div className="listDiv">
-            {authCtx.isLoggedIn && (
+            {isLoggedIn && (
               <button
                 className="arrowListLeftScroll"
                 onClick={() =>
@@ -430,7 +430,7 @@ const Browse = (props) => {
                 />
               ))}
             </ul>
-            {authCtx.isLoggedIn && (
+            {isLoggedIn && (
               <button
                 className="arrowListRightScroll"
                 onClick={() =>

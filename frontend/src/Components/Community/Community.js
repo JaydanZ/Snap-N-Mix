@@ -78,10 +78,10 @@ const Community = (props) => {
               }
             })
             .catch((err) => {
-              console.log(err);
+              console.error(err);
             });
         } catch (error) {
-          console.log("fail");
+          console.error("fail");
         }
       } else {
         setCustomMixData(GUEST_CUSTOM);
@@ -98,13 +98,12 @@ const Community = (props) => {
           .then((res) => {
             CUSTOM_ALLMIXDATA = res.data;
             setAllCustomMixData(CUSTOM_ALLMIXDATA);
-            console.log(CUSTOM_ALLMIXDATA);
           })
           .catch((err) => {
-            console.log(err);
+            console.error(err);
           });
       } catch (error) {
-        console.log("fail");
+        console.error("fail");
       }
     } else {
       setCustomMixData(GUEST_CUSTOM);
@@ -161,6 +160,7 @@ const Community = (props) => {
                     ? ""
                     : "customdrink"
                 }
+                key={drink.idDrink}
                 id={drink.idDrink}
                 title={drink.strDrink}
                 avatar={drink.strDrinkThumb}
@@ -201,6 +201,7 @@ const Community = (props) => {
                 type="communitycustomdrink"
                 createdBy={drink.createdBy}
                 id={drink.idDrink}
+                key={drink.idDrink}
                 title={drink.strDrink}
                 avatar={drink.strDrinkThumb}
                 clickHandler={authCtx.isLoggedIn ? cardClickHandler : ""}

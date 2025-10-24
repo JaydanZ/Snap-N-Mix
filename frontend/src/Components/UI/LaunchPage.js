@@ -14,7 +14,7 @@ const LaunchPage = (props) => {
             alt="company-brand"
           ></img>
 
-          <div class="ageVeificationDiv">
+          <div className="ageVeificationDiv">
             <h2>Age Verification</h2>
             <p>
               By clicking enter, you certify that you are of legal drinking age
