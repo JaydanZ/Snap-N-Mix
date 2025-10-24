@@ -220,7 +220,7 @@ const CustomMixDetailer = (props) => {
               />
             </React.Fragment>
           ) : (
-            <div>
+            <React.Fragment>
               <div className="sp_card_custommix" onClick={uploadClickHandler}>
                 <div className="sp_card_icon">
                   <ion-icon name="arrow-down-outline"></ion-icon>
@@ -235,7 +235,7 @@ const CustomMixDetailer = (props) => {
                 onChange={handleFileUpload}
                 style={{ display: "none" }}
               />
-            </div>
+            </React.Fragment>
           )}
         </div>
         <input
