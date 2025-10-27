@@ -2,6 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const axios = require('axios');
+const Redis = require('redis');
 
 //Database models
 const RecipeModel = require("../../models/RecipeModel");
@@ -9,7 +10,9 @@ const CustomRecipeModel = require("../../models/CustomRecipe");
 
 //Validation middlware
 const verify_token = require('../verify-token');
-const { custom } = require("joi");
+//const { custom } = require("joi");
+
+const redisClient = Redis.createClient({ url: process.env.REDIS_URL });
 
 
 /**
@@ -69,14 +72,13 @@ router.get("/all/:letter", async function (req, res) {
  * /api/cocktails/popular
  */
 router.get("/popular", async function (req, res) {
-
     try {
         const api_response = await axios.get(`https://www.thecocktaildb.com/api/json/v2/${process.env.COCKTAIL_DB_API_KEY}/popular.php`);
+        console.log(api_response.headers);
         res.status(200).send(api_response.data);
     } catch (error) {
         res.status(400).send('Problems while looking up the most popular cocktails.');
     }
-
 });
 
 
@@ -86,14 +88,13 @@ router.get("/popular", async function (req, res) {
  * /api/cocktails/latest
  */
 router.get("/latest", async function (req, res) {
-
     try {
         const api_response = await axios.get(`https://www.thecocktaildb.com/api/json/v2/${process.env.COCKTAIL_DB_API_KEY}/latest.php`);
+        console.log(api_response.headers);
         res.status(200).send(api_response.data);
     } catch (error) {
         res.status(400).send('Problems while looking up the latest cocktails.');
     }
-
 });
 
 
