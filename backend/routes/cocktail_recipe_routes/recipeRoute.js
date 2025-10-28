@@ -14,6 +14,22 @@ const verify_token = require('../verify-token');
 
 const redisClient = Redis.createClient({ url: process.env.REDIS_URL });
 
+// Redis constants
+const EXPIRE_TIME = 3600;
+
+// Start redis client and connect to redis instance
+(async() => {
+    redisClient.on('error',(err) => {
+        console.error("Redis client error ",err);
+    });
+    redisClient.on('ready',()=> {
+        console.log("Redis client started...");
+    });
+
+    await redisClient.connect();
+    await redisClient.ping();
+})();
+
 
 /**
  * GET all cocktail categories
@@ -73,9 +89,22 @@ router.get("/all/:letter", async function (req, res) {
  */
 router.get("/popular", async function (req, res) {
     try {
-        const api_response = await axios.get(`https://www.thecocktaildb.com/api/json/v2/${process.env.COCKTAIL_DB_API_KEY}/popular.php`);
-        console.log(api_response.headers);
-        res.status(200).send(api_response.data);
+        let result = null;
+        const key = "popular";
+        const cachedData = await redisClient.get(key);
+
+        if(!cachedData){
+            const api_response = await axios.get(`https://www.thecocktaildb.com/api/json/v2/${process.env.COCKTAIL_DB_API_KEY}/popular.php`);
+            result = api_response.data;
+            await redisClient.set(key, JSON.stringify(result),{
+                EX: EXPIRE_TIME,
+            });
+        } else {
+            result = JSON.parse(cachedData);
+            console.log("cache hit...");
+        }
+
+        res.status(200).send(result);
     } catch (error) {
         res.status(400).send('Problems while looking up the most popular cocktails.');
     }
@@ -89,9 +118,22 @@ router.get("/popular", async function (req, res) {
  */
 router.get("/latest", async function (req, res) {
     try {
-        const api_response = await axios.get(`https://www.thecocktaildb.com/api/json/v2/${process.env.COCKTAIL_DB_API_KEY}/latest.php`);
-        console.log(api_response.headers);
-        res.status(200).send(api_response.data);
+        let result = null;
+        const key = "latest";
+        const cachedData = await redisClient.get(key);
+
+        if(!cachedData){
+            const api_response = await axios.get(`https://www.thecocktaildb.com/api/json/v2/${process.env.COCKTAIL_DB_API_KEY}/latest.php`);
+            result = api_response.data;
+            await redisClient.set(key, JSON.stringify(result), {
+                EX: EXPIRE_TIME,
+            })
+        } else {
+            result = JSON.parse(cachedData);
+            console.log("cache hit...");
+        }
+
+        res.status(200).send(result);
     } catch (error) {
         res.status(400).send('Problems while looking up the latest cocktails.');
     }
