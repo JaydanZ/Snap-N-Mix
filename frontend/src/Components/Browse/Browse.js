@@ -282,7 +282,7 @@ const Browse = (props) => {
               ))}
             </ul>
           )}
-          <h5 className="listHeader">{`Categories${selectedCategory.length > 0 ? ` - ${selectedCategory}` : ""}`}</h5>
+          <h5 className="listHeader">{selectedCategory.length > 0 ? `Category - ${selectedCategory}` : "Categories"}</h5>
           <div className="listDiv">
             {OPEN_CATEGORY && (
               <button
