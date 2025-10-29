@@ -10,7 +10,6 @@ const CustomRecipeModel = require("../../models/CustomRecipe");
 
 //Validation middlware
 const verify_token = require('../verify-token');
-//const { custom } = require("joi");
 
 const redisClient = Redis.createClient({ url: process.env.REDIS_URL });
 
@@ -44,6 +43,7 @@ const setRedisCacheValue = async(key, value)=>{
     await redisClient.set(key, JSON.stringify(value),{
         EX: EXPIRE_TIME,
     });
+    console.log(`${key} cache set...`);
 }
 
 /**
