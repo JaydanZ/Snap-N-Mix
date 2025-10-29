@@ -30,6 +30,21 @@ const EXPIRE_TIME = 3600;
     await redisClient.ping();
 })();
 
+// Redis helper funcs
+const getRedisCacheValue = async(key)=>{
+    const cachedData = await redisClient.get(key);
+    if(cachedData){
+        console.log("cache hit...");
+        return JSON.parse(cachedData);
+    } 
+    return null;
+}
+
+const setRedisCacheValue = async(key, value)=>{
+    await redisClient.set(key, JSON.stringify(value),{
+        EX: EXPIRE_TIME,
+    });
+}
 
 /**
  * GET all cocktail categories
@@ -46,7 +61,6 @@ router.get("/categories", async function (req, res) {
 
 });
 
-
 /**
  * GET cocktail by categories
  * /api/cocktails/categories/:categoryID
@@ -61,7 +75,6 @@ router.get("/categories/:categoryID", async function (req, res) {
     }
 
 });
-
 
 /**
  * GET all cocktails by first letter
@@ -82,7 +95,6 @@ router.get("/all/:letter", async function (req, res) {
 
 });
 
-
 /**
  * GET most popular cocktails
  * /api/cocktails/popular
@@ -90,27 +102,22 @@ router.get("/all/:letter", async function (req, res) {
 router.get("/popular", async function (req, res) {
     try {
         let result = null;
-        const key = "popular";
-        const cachedData = await redisClient.get(key);
+        const key = "popular"
+        const cachedData = await getRedisCacheValue(key);
 
         if(!cachedData){
             const api_response = await axios.get(`https://www.thecocktaildb.com/api/json/v2/${process.env.COCKTAIL_DB_API_KEY}/popular.php`);
             result = api_response.data;
-            await redisClient.set(key, JSON.stringify(result),{
-                EX: EXPIRE_TIME,
-            });
+            await setRedisCacheValue(key,result);
         } else {
-            result = JSON.parse(cachedData);
-            console.log("cache hit...");
+            result = cachedData;
         }
 
         res.status(200).send(result);
     } catch (error) {
-        res.status(400).send('Problems while looking up the most popular cocktails.');
+        res.status(400).send('Error occured looking up the most popular cocktails.');
     }
 });
-
-
 
 /**
  * GET latest cocktails
@@ -120,22 +127,19 @@ router.get("/latest", async function (req, res) {
     try {
         let result = null;
         const key = "latest";
-        const cachedData = await redisClient.get(key);
+        const cachedData = await getRedisCacheValue(key);
 
         if(!cachedData){
             const api_response = await axios.get(`https://www.thecocktaildb.com/api/json/v2/${process.env.COCKTAIL_DB_API_KEY}/latest.php`);
             result = api_response.data;
-            await redisClient.set(key, JSON.stringify(result), {
-                EX: EXPIRE_TIME,
-            })
+            await setRedisCacheValue(key, result);
         } else {
-            result = JSON.parse(cachedData);
-            console.log("cache hit...");
+            result = cachedData;
         }
 
         res.status(200).send(result);
     } catch (error) {
-        res.status(400).send('Problems while looking up the latest cocktails.');
+        res.status(400).send('Error occured while looking up the latest cocktails.');
     }
 });
 
