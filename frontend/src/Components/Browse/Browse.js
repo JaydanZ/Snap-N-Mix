@@ -43,7 +43,7 @@ const Browse = (props) => {
   const [isLoading, setIsLoading] = useState(false);
 
   // HOOKS
-  const debouncedSearchValue = useDebounce(cocktailSearchValue, 1000);
+  const debouncedSearchValue = useDebounce(cocktailSearchValue, 500);
   const { isLoggedIn, token, favs } = useContext(AuthContext);
 
   const { navBar } = props;
@@ -141,8 +141,10 @@ const Browse = (props) => {
         .then((res) => {
           if (res.data.drinks != null) {
             RECIPE_DATA = res.data.drinks;
-            setDisplayedSearchData(RECIPE_DATA);
+          } else {
+            RECIPE_DATA = [];
           }
+          setDisplayedSearchData(RECIPE_DATA);
         })
         .catch((err) => {
           console.error(err);
@@ -156,6 +158,8 @@ const Browse = (props) => {
     if (debouncedSearchValue && debouncedSearchValue.length > 0) {
       const cocktailEntered = debouncedSearchValue.trim().replace(" ", "+");
       searchCocktail(cocktailEntered);
+    } else {
+      setDisplayedSearchData([]);
     }
   }, [debouncedSearchValue]);
 
@@ -257,7 +261,7 @@ const Browse = (props) => {
               onChange={(e) => setCocktailSearchValue(e.target.value)}
             ></input>
           </div>
-          {displayedSearchData && (
+          {displayedSearchData.length > 0 && (
             <ul className="cocktailSearchList">
               {displayedSearchData.map((drink) => (
                 <CocktailCircleCard
