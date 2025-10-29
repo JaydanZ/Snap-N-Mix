@@ -36,6 +36,7 @@ const Browse = (props) => {
   const [displayedFavoriteData, setDisplayedFavoriteData] = useState([]);
   const [displayedSearchData, setDisplayedSearchData] = useState([]);
   const [displayedCategoryData, setDisplayedCategoryData] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [displayedCategoryBackButton, setDisplayedCategoryBackButton] =
     useState("");
   const [displayDetails, setDisplayDetails] = useState(null);
@@ -214,6 +215,7 @@ const Browse = (props) => {
                 clickHandler={categoryClickHandler}
               />
             );
+            setSelectedCategory(category);
             setDisplayedCategoryData(categoryArray);
             let catList = document.querySelector(".cocktailCategoryList");
             catList.scrollLeft = 0;
@@ -228,6 +230,7 @@ const Browse = (props) => {
     } else {
       getDrinks("categories", setDisplayedCategoryData);
       setDisplayedCategoryBackButton();
+      setSelectedCategory("");
       OPEN_CATEGORY = false;
     }
   };
@@ -259,6 +262,7 @@ const Browse = (props) => {
               aria-label="Search for a cocktail.."
               aria-describedby="button-addon2"
               onChange={(e) => setCocktailSearchValue(e.target.value)}
+              value={cocktailSearchValue}
             ></input>
           </div>
           {displayedSearchData.length > 0 && (
@@ -278,6 +282,7 @@ const Browse = (props) => {
               ))}
             </ul>
           )}
+          <h5 className="listHeader">{`Categories${selectedCategory.length > 0 ? ` - ${selectedCategory}` : ""}`}</h5>
           <div className="listDiv">
             {OPEN_CATEGORY && (
               <button
