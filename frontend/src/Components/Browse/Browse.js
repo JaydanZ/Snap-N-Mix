@@ -73,10 +73,10 @@ const Browse = (props) => {
           }
         })
         .catch((err) => {
-          console.log(err);
+          console.error(err);
         });
     } catch (error) {
-      console.log("fail");
+      console.error(error);
     }
   };
 
@@ -108,10 +108,10 @@ const Browse = (props) => {
               }
             })
             .catch((err) => {
-              console.log(err);
+              console.error(err);
             });
         } catch (error) {
-          console.log("fail");
+          console.error(error);
         }
       } else {
         setDisplayedFavoriteData(NO_FAVORITES_GUEST);
@@ -152,42 +152,8 @@ const Browse = (props) => {
     }
   };
 
-  // const cocktailSearchHandler = useCallback(
-  //   (event) => {
-  //     let cocktailEntered = "";
-  //     console.log(event.target.value);
-
-  //     if (event.target.value.length > 0) {
-  //       cocktailEntered = event.target.value.trim();
-  //       cocktailEntered = cocktailEntered.replace(" ", "+");
-  //       searchCocktail(cocktailEntered);
-  //       setCocktailSearch(
-  //         <ul className="cocktailSearchList">
-  //           {displayedSearchData.map((drink) => (
-  //             <CocktailCircleCard
-  //               type="drink"
-  //               id={drink.idDrink}
-  //               title={drink.strDrink}
-  //               avatar={drink.strDrinkThumb}
-  //               ingredients={ingredientsHandler(drink)}
-  //               instructions={drink.strInstructions}
-  //               clickHandler={cardClickHandler}
-  //               updateFavorites={updateFavoritesHandler}
-  //               favoriteIDs={FAV_IDS}
-  //             />
-  //           ))}
-  //         </ul>
-  //       );
-  //     } else {
-  //       setCocktailSearch();
-  //     }
-  //   },
-  //   [updateFavoritesHandler]
-  // );
-
   useEffect(() => {
     if (debouncedSearchValue && debouncedSearchValue.length > 0) {
-      //cocktailSearchHandler(debouncedSearchValue);
       const cocktailEntered = debouncedSearchValue.trim().replace(" ", "+");
       searchCocktail(cocktailEntered);
     }
