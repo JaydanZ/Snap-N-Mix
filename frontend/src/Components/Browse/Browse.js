@@ -6,6 +6,7 @@ import React, { useState, useEffect, useContext, useCallback } from "react";
 import axios from "axios";
 import AuthContext from "../store/auth-context";
 import NavBar2 from "../NavBar/NavBar2";
+import useDebounce from "../../Hooks/useDebounce";
 
 const startUrl = process.env.REACT_APP_BACKEND_URL;
 
@@ -29,6 +30,7 @@ let RECIPE_DATA = [];
 let OPEN_CATEGORY = false;
 
 const Browse = (props) => {
+  // STATE
   const [displayedPopularData, setDisplayedPopularData] = useState([]);
   const [displayedLatestData, setDisplayedLatestData] = useState([]);
   const [displayedFavoriteData, setDisplayedFavoriteData] = useState([]);
@@ -37,10 +39,14 @@ const Browse = (props) => {
   const [displayedCategoryBackButton, setDisplayedCategoryBackButton] =
     useState("");
   const [displayDetails, setDisplayDetails] = useState(null);
-  const [cocktailSearch, setCocktailSearch] = useState();
+  const [cocktailSearchValue, setCocktailSearchValue] = useState();
   const [isLoading, setIsLoading] = useState(false);
 
+  // HOOKS
+  const debouncedSearchValue = useDebounce(cocktailSearchValue, 1000);
   const { isLoggedIn, token, favs } = useContext(AuthContext);
+
+  const { navBar } = props;
 
   const getDrinks = (category, func) => {
     try {
@@ -114,7 +120,9 @@ const Browse = (props) => {
     [favs, token]
   );
 
-  const { navBar } = props;
+  const updateFavoritesHandler = useCallback(() => {
+    getFavoriteDrinks(true);
+  }, [getFavoriteDrinks]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -137,41 +145,53 @@ const Browse = (props) => {
           }
         })
         .catch((err) => {
-          console.log(err);
+          console.error(err);
         });
     } catch (error) {
-      console.log("fail");
+      console.error("fail");
     }
   };
 
-  const cocktailSearchHandler = (event) => {
-    let cocktailEntered = "";
+  // const cocktailSearchHandler = useCallback(
+  //   (event) => {
+  //     let cocktailEntered = "";
+  //     console.log(event.target.value);
 
-    if (event.target.value.length > 0) {
-      cocktailEntered = event.target.value.trim();
-      cocktailEntered = cocktailEntered.replace(" ", "+");
+  //     if (event.target.value.length > 0) {
+  //       cocktailEntered = event.target.value.trim();
+  //       cocktailEntered = cocktailEntered.replace(" ", "+");
+  //       searchCocktail(cocktailEntered);
+  //       setCocktailSearch(
+  //         <ul className="cocktailSearchList">
+  //           {displayedSearchData.map((drink) => (
+  //             <CocktailCircleCard
+  //               type="drink"
+  //               id={drink.idDrink}
+  //               title={drink.strDrink}
+  //               avatar={drink.strDrinkThumb}
+  //               ingredients={ingredientsHandler(drink)}
+  //               instructions={drink.strInstructions}
+  //               clickHandler={cardClickHandler}
+  //               updateFavorites={updateFavoritesHandler}
+  //               favoriteIDs={FAV_IDS}
+  //             />
+  //           ))}
+  //         </ul>
+  //       );
+  //     } else {
+  //       setCocktailSearch();
+  //     }
+  //   },
+  //   [updateFavoritesHandler]
+  // );
+
+  useEffect(() => {
+    if (debouncedSearchValue && debouncedSearchValue.length > 0) {
+      //cocktailSearchHandler(debouncedSearchValue);
+      const cocktailEntered = debouncedSearchValue.trim().replace(" ", "+");
       searchCocktail(cocktailEntered);
-      setCocktailSearch(
-        <ul className="cocktailSearchList">
-          {displayedSearchData.map((drink) => (
-            <CocktailCircleCard
-              type="drink"
-              id={drink.idDrink}
-              title={drink.strDrink}
-              avatar={drink.strDrinkThumb}
-              ingredients={ingredientsHandler(drink)}
-              instructions={drink.strInstructions}
-              clickHandler={cardClickHandler}
-              updateFavorites={updateFavoritesHandler}
-              favoriteIDs={FAV_IDS}
-            />
-          ))}
-        </ul>
-      );
-    } else {
-      setCocktailSearch();
     }
-  };
+  }, [debouncedSearchValue]);
 
   const ingredientsHandler = (drink) => {
     let ingredients = [];
@@ -207,10 +227,6 @@ const Browse = (props) => {
 
   const cardClickHandler = (state) => {
     setDisplayDetails(state);
-  };
-
-  const updateFavoritesHandler = () => {
-    getFavoriteDrinks(true);
   };
 
   const categoryClickHandler = (category) => {
@@ -272,10 +288,26 @@ const Browse = (props) => {
               placeholder="Search for a cocktail.."
               aria-label="Search for a cocktail.."
               aria-describedby="button-addon2"
-              onChange={cocktailSearchHandler}
+              onChange={(e) => setCocktailSearchValue(e.target.value)}
             ></input>
           </div>
-          {cocktailSearch}
+          {displayedSearchData && (
+            <ul className="cocktailSearchList">
+              {displayedSearchData.map((drink) => (
+                <CocktailCircleCard
+                  type="drink"
+                  id={drink.idDrink}
+                  title={drink.strDrink}
+                  avatar={drink.strDrinkThumb}
+                  ingredients={ingredientsHandler(drink)}
+                  instructions={drink.strInstructions}
+                  clickHandler={cardClickHandler}
+                  updateFavorites={updateFavoritesHandler}
+                  favoriteIDs={FAV_IDS}
+                />
+              ))}
+            </ul>
+          )}
           <div className="listDiv">
             {OPEN_CATEGORY && (
               <button
