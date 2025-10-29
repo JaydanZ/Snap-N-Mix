@@ -2,6 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const axios = require('axios');
+const Redis = require('redis');
 
 //Database models
 const RecipeModel = require("../../models/RecipeModel");
@@ -9,8 +10,41 @@ const CustomRecipeModel = require("../../models/CustomRecipe");
 
 //Validation middlware
 const verify_token = require('../verify-token');
-const { custom } = require("joi");
 
+const redisClient = Redis.createClient({ url: process.env.REDIS_URL });
+
+// Redis constants
+const EXPIRE_TIME = 3600;
+
+// Start redis client and connect to redis instance
+(async() => {
+    redisClient.on('error',(err) => {
+        console.error("Redis client error ",err);
+    });
+    redisClient.on('ready',()=> {
+        console.log("Redis client started...");
+    });
+
+    await redisClient.connect();
+    await redisClient.ping();
+})();
+
+// Redis helper funcs
+const getRedisCacheValue = async(key)=>{
+    const cachedData = await redisClient.get(key);
+    if(cachedData){
+        console.log("cache hit...");
+        return JSON.parse(cachedData);
+    } 
+    return null;
+}
+
+const setRedisCacheValue = async(key, value)=>{
+    await redisClient.set(key, JSON.stringify(value),{
+        EX: EXPIRE_TIME,
+    });
+    console.log(`${key} cache set...`);
+}
 
 /**
  * GET all cocktail categories
@@ -27,7 +61,6 @@ router.get("/categories", async function (req, res) {
 
 });
 
-
 /**
  * GET cocktail by categories
  * /api/cocktails/categories/:categoryID
@@ -42,7 +75,6 @@ router.get("/categories/:categoryID", async function (req, res) {
     }
 
 });
-
 
 /**
  * GET all cocktails by first letter
@@ -63,37 +95,52 @@ router.get("/all/:letter", async function (req, res) {
 
 });
 
-
 /**
  * GET most popular cocktails
  * /api/cocktails/popular
  */
 router.get("/popular", async function (req, res) {
-
     try {
-        const api_response = await axios.get(`https://www.thecocktaildb.com/api/json/v2/${process.env.COCKTAIL_DB_API_KEY}/popular.php`);
-        res.status(200).send(api_response.data);
+        let result = null;
+        const key = "popular"
+        const cachedData = await getRedisCacheValue(key);
+
+        if(!cachedData){
+            const api_response = await axios.get(`https://www.thecocktaildb.com/api/json/v2/${process.env.COCKTAIL_DB_API_KEY}/popular.php`);
+            result = api_response.data;
+            await setRedisCacheValue(key,result);
+        } else {
+            result = cachedData;
+        }
+
+        res.status(200).send(result);
     } catch (error) {
-        res.status(400).send('Problems while looking up the most popular cocktails.');
+        res.status(400).send('Error occured looking up the most popular cocktails.');
     }
-
 });
-
-
 
 /**
  * GET latest cocktails
  * /api/cocktails/latest
  */
 router.get("/latest", async function (req, res) {
-
     try {
-        const api_response = await axios.get(`https://www.thecocktaildb.com/api/json/v2/${process.env.COCKTAIL_DB_API_KEY}/latest.php`);
-        res.status(200).send(api_response.data);
-    } catch (error) {
-        res.status(400).send('Problems while looking up the latest cocktails.');
-    }
+        let result = null;
+        const key = "latest";
+        const cachedData = await getRedisCacheValue(key);
 
+        if(!cachedData){
+            const api_response = await axios.get(`https://www.thecocktaildb.com/api/json/v2/${process.env.COCKTAIL_DB_API_KEY}/latest.php`);
+            result = api_response.data;
+            await setRedisCacheValue(key, result);
+        } else {
+            result = cachedData;
+        }
+
+        res.status(200).send(result);
+    } catch (error) {
+        res.status(400).send('Error occured while looking up the latest cocktails.');
+    }
 });
 
 

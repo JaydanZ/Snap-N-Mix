@@ -26,6 +26,7 @@
     "mathjs": "^10.3.0",
     "mime": "^3.0.0",
     "mongoose": "^6.2.1",
+    "redis": "^5.9.0",
     "request": "^2.88.2",
     "string-similarity": "^4.0.4"
   },
