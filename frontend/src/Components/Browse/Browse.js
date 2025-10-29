@@ -6,6 +6,7 @@ import React, { useState, useEffect, useContext, useCallback } from "react";
 import axios from "axios";
 import AuthContext from "../store/auth-context";
 import NavBar2 from "../NavBar/NavBar2";
+import useDebounce from "../../Hooks/useDebounce";
 
 const startUrl = process.env.REACT_APP_BACKEND_URL;
 
@@ -29,18 +30,24 @@ let RECIPE_DATA = [];
 let OPEN_CATEGORY = false;
 
 const Browse = (props) => {
+  // STATE
   const [displayedPopularData, setDisplayedPopularData] = useState([]);
   const [displayedLatestData, setDisplayedLatestData] = useState([]);
   const [displayedFavoriteData, setDisplayedFavoriteData] = useState([]);
   const [displayedSearchData, setDisplayedSearchData] = useState([]);
   const [displayedCategoryData, setDisplayedCategoryData] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [displayedCategoryBackButton, setDisplayedCategoryBackButton] =
     useState("");
   const [displayDetails, setDisplayDetails] = useState(null);
-  const [cocktailSearch, setCocktailSearch] = useState();
+  const [cocktailSearchValue, setCocktailSearchValue] = useState();
   const [isLoading, setIsLoading] = useState(false);
 
+  // HOOKS
+  const debouncedSearchValue = useDebounce(cocktailSearchValue, 500);
   const { isLoggedIn, token, favs } = useContext(AuthContext);
+
+  const { navBar } = props;
 
   const getDrinks = (category, func) => {
     try {
@@ -67,10 +74,10 @@ const Browse = (props) => {
           }
         })
         .catch((err) => {
-          console.log(err);
+          console.error(err);
         });
     } catch (error) {
-      console.log("fail");
+      console.error(error);
     }
   };
 
@@ -102,10 +109,10 @@ const Browse = (props) => {
               }
             })
             .catch((err) => {
-              console.log(err);
+              console.error(err);
             });
         } catch (error) {
-          console.log("fail");
+          console.error(error);
         }
       } else {
         setDisplayedFavoriteData(NO_FAVORITES_GUEST);
@@ -114,7 +121,9 @@ const Browse = (props) => {
     [favs, token]
   );
 
-  const { navBar } = props;
+  const updateFavoritesHandler = useCallback(() => {
+    getFavoriteDrinks(true);
+  }, [getFavoriteDrinks]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -133,45 +142,27 @@ const Browse = (props) => {
         .then((res) => {
           if (res.data.drinks != null) {
             RECIPE_DATA = res.data.drinks;
-            setDisplayedSearchData(RECIPE_DATA);
+          } else {
+            RECIPE_DATA = [];
           }
+          setDisplayedSearchData(RECIPE_DATA);
         })
         .catch((err) => {
-          console.log(err);
+          console.error(err);
         });
     } catch (error) {
-      console.log("fail");
+      console.error("fail");
     }
   };
 
-  const cocktailSearchHandler = (event) => {
-    let cocktailEntered = "";
-
-    if (event.target.value.length > 0) {
-      cocktailEntered = event.target.value.trim();
-      cocktailEntered = cocktailEntered.replace(" ", "+");
+  useEffect(() => {
+    if (debouncedSearchValue && debouncedSearchValue.length > 0) {
+      const cocktailEntered = debouncedSearchValue.trim().replace(" ", "+");
       searchCocktail(cocktailEntered);
-      setCocktailSearch(
-        <ul className="cocktailSearchList">
-          {displayedSearchData.map((drink) => (
-            <CocktailCircleCard
-              type="drink"
-              id={drink.idDrink}
-              title={drink.strDrink}
-              avatar={drink.strDrinkThumb}
-              ingredients={ingredientsHandler(drink)}
-              instructions={drink.strInstructions}
-              clickHandler={cardClickHandler}
-              updateFavorites={updateFavoritesHandler}
-              favoriteIDs={FAV_IDS}
-            />
-          ))}
-        </ul>
-      );
     } else {
-      setCocktailSearch();
+      setDisplayedSearchData([]);
     }
-  };
+  }, [debouncedSearchValue]);
 
   const ingredientsHandler = (drink) => {
     let ingredients = [];
@@ -209,10 +200,6 @@ const Browse = (props) => {
     setDisplayDetails(state);
   };
 
-  const updateFavoritesHandler = () => {
-    getFavoriteDrinks(true);
-  };
-
   const categoryClickHandler = (category) => {
     if (OPEN_CATEGORY === false) {
       try {
@@ -228,6 +215,7 @@ const Browse = (props) => {
                 clickHandler={categoryClickHandler}
               />
             );
+            setSelectedCategory(category);
             setDisplayedCategoryData(categoryArray);
             let catList = document.querySelector(".cocktailCategoryList");
             catList.scrollLeft = 0;
@@ -242,6 +230,7 @@ const Browse = (props) => {
     } else {
       getDrinks("categories", setDisplayedCategoryData);
       setDisplayedCategoryBackButton();
+      setSelectedCategory("");
       OPEN_CATEGORY = false;
     }
   };
@@ -272,10 +261,28 @@ const Browse = (props) => {
               placeholder="Search for a cocktail.."
               aria-label="Search for a cocktail.."
               aria-describedby="button-addon2"
-              onChange={cocktailSearchHandler}
+              onChange={(e) => setCocktailSearchValue(e.target.value)}
+              value={cocktailSearchValue}
             ></input>
           </div>
-          {cocktailSearch}
+          {displayedSearchData.length > 0 && (
+            <ul className="cocktailSearchList">
+              {displayedSearchData.map((drink) => (
+                <CocktailCircleCard
+                  type="drink"
+                  id={drink.idDrink}
+                  title={drink.strDrink}
+                  avatar={drink.strDrinkThumb}
+                  ingredients={ingredientsHandler(drink)}
+                  instructions={drink.strInstructions}
+                  clickHandler={cardClickHandler}
+                  updateFavorites={updateFavoritesHandler}
+                  favoriteIDs={FAV_IDS}
+                />
+              ))}
+            </ul>
+          )}
+          <h5 className="listHeader">{selectedCategory.length > 0 ? `Category - ${selectedCategory}` : "Categories"}</h5>
           <div className="listDiv">
             {OPEN_CATEGORY && (
               <button

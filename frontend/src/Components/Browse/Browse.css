@@ -6,20 +6,6 @@
   padding: 0;
 }
 
-/* .searchFormControl { 
-    width:100%;
-    margin-top: 3px;
-    border-color:rgba(255, 68, 0, 0);
-    text-indent:12px;
-    font-size:20px;
-    font-family:'Lato';
-    opacity:35%;
-}
-
-.searchFormControl:focus {
-    outline:none;
-} */
-
 .searchFormControl { 
     width:100%;
     margin: 0px;
@@ -39,7 +25,6 @@
     height: fit-content;
     position: relative;
     margin: 10px;
-    margin-bottom: 0;
   }
 
   .input-search {
@@ -99,6 +84,7 @@
     justify-content:center;
     align-items:center;
     width:100vw;
+    padding-left: 0 !important;
 }
 
 .cocktailAllLists{
