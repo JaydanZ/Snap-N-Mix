@@ -44,7 +44,7 @@ const Browse = (props) => {
   const [isLoading, setIsLoading] = useState(false);
 
   // HOOKS
-  const debouncedSearchValue = useDebounce(cocktailSearchValue, 500);
+  const debouncedSearchValue = useDebounce(cocktailSearchValue, 350);
   const { isLoggedIn, token, favs } = useContext(AuthContext);
 
   const { navBar } = props;
